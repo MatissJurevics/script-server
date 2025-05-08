@@ -8,6 +8,14 @@
 </head>
 <body>
     <h1>Script Manager</h1>
+    
+    <div class="password-container">
+        <input type="password" id="savedPassword" placeholder="Set your password">
+        <button id="savePasswordBtn" onclick="savePassword()">Save Password</button>
+        <button id="clearPasswordBtn" onclick="clearPassword()">Clear Saved Password</button>
+        <span id="passwordStatus"></span>
+    </div>
+    
     <div class="container">
         <div class="form-container">
             <h2>Upload Script</h2>

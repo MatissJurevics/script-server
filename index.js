@@ -44,9 +44,113 @@ app.get('/scripts', (req, res) => {
 app.get('/s/:scriptName', (req, res) => {
     const scriptName = req.params.scriptName;
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
+    if (!fs.existsSync(scriptPath)) {
+        return res.status(404).send('Script not found');
+    }
+    res.setHeader('Content-Disposition', `attachment; filename="${scriptName}"`);
     const scriptContent = fs.readFileSync(scriptPath, 'utf8');
     console.log("Script Requested", scriptName);
     res.send(scriptContent);
+});
+
+app.get("/main", (req, res) => {
+    const mainFiles = fs.readdirSync(__dirname)
+        .filter(file => file.startsWith('main.'))
+        .map(file => ({ name: file, path: path.join(__dirname, file) }));
+    if (mainFiles.length > 0) {
+        const mainFile = mainFiles[0];
+        console.log("Main file requested", mainFile);
+        res.setHeader('Content-Disposition', `attachment; filename="${mainFile.name}"`);
+        res.sendFile(path.join(__dirname, mainFile.name));
+    } else {
+        res.status(404).send('Main file not found');
+    }
+});
+
+const CURRENT_MAIN_SCRIPT_CONFIG_PATH = path.join(__dirname, 'current_main_script.json');
+
+app.post("/main", (req, res) => {
+    const { password, fileName } = req.body;
+    
+    if (password !== PASSWORD) {
+        console.log("Unauthorized User for setting main file", password, PASSWORD);
+        return res.status(401).send('Unauthorized');
+    }
+    const scriptToSetAsMainPath = path.join(__dirname, 'scripts', fileName);
+
+    if (!fs.existsSync(scriptToSetAsMainPath)) {
+        console.log("Script to set as main not found:", fileName);
+        return res.status(404).send('Script not found in scripts directory');
+    }
+    const fileContent = fs.readFileSync(scriptToSetAsMainPath, 'utf8');
+
+    // Remove existing main.* files to avoid conflicts before creating new one
+    const existingMainFiles = fs.readdirSync(__dirname).filter(file => file.startsWith('main.'));
+    existingMainFiles.forEach(file => {
+        try {
+            fs.unlinkSync(path.join(__dirname, file));
+            console.log(`Removed existing main file: ${file}`);
+        } catch (err) {
+            console.error(`Error removing existing main file ${file}:`, err);
+            // Proceeding, as this might not be critical if next steps succeed
+        }
+    });
+    
+    const tempMainFilePath = path.join(__dirname, 'main.temp_txt'); // Use a temp name first
+    fs.writeFileSync(tempMainFilePath, fileContent);
+
+    const fileExtension = path.extname(fileName);
+    let newMainFilePath = path.join(__dirname, `main${fileExtension}`);
+    
+    // In case there's no extension, default to .txt or handle as per preference
+    if (!fileExtension) {
+        newMainFilePath = path.join(__dirname, 'main.txt');
+    }
+
+    try {
+        fs.renameSync(tempMainFilePath, newMainFilePath);
+        console.log(`Main file created/updated: ${newMainFilePath.split(path.sep).pop()}`);
+        
+        // Save the original script name as the current main script
+        fs.writeFileSync(CURRENT_MAIN_SCRIPT_CONFIG_PATH, JSON.stringify({ mainScriptName: fileName }));
+        console.log(`Main script name saved to config: ${fileName}`);
+        
+        res.send(`Script '${fileName}' successfully set as main file (${newMainFilePath.split(path.sep).pop()}`);
+    } catch (err) {
+        console.error('Error renaming/processing main file:', err);
+        // Attempt to clean up temp file if rename failed
+        if (fs.existsSync(tempMainFilePath)) {
+            fs.unlinkSync(tempMainFilePath);
+        }
+        res.status(500).send('Error setting main file.');
+    }
+});
+
+app.get('/api/get-main-script-name', (req, res) => {
+    if (fs.existsSync(CURRENT_MAIN_SCRIPT_CONFIG_PATH)) {
+        try {
+            const configContent = fs.readFileSync(CURRENT_MAIN_SCRIPT_CONFIG_PATH, 'utf8');
+            const config = JSON.parse(configContent);
+            console.log("Current main script name requested:", config.mainScriptName);
+            res.json({ mainScriptName: config.mainScriptName });
+        } catch (error) {
+            console.error("Error reading or parsing current_main_script.json:", error);
+            // Attempt to restore from backup
+            const backupPath = `${CURRENT_MAIN_SCRIPT_CONFIG_PATH}.bak`;
+            if (fs.existsSync(backupPath)) {
+                fs.copyFileSync(backupPath, CURRENT_MAIN_SCRIPT_CONFIG_PATH);
+                console.log("Restored current_main_script.json from backup.");
+                const configContent = fs.readFileSync(CURRENT_MAIN_SCRIPT_CONFIG_PATH, 'utf8');
+                const config = JSON.parse(configContent);
+                res.json({ mainScriptName: config.mainScriptName });
+            } else {
+                res.json({ mainScriptName: null }); // Send null if error or file malformed
+            }
+        }
+    } else {
+        console.log("current_main_script.json not found, no main script set.");
+        res.json({ mainScriptName: null }); // No config file means no main script is set
+    }
 });
 
 app.delete('/s/:scriptName', (req, res) => {
