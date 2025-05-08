@@ -234,7 +234,7 @@ button:hover {
 }
 
 /* Responsive Design Adjustments */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 800px) {
     .container {
         flex-direction: column;
         align-items: center; /* Center items when stacked */
