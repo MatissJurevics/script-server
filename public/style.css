@@ -171,4 +171,96 @@ button:hover {
 
 #scriptList .edit-button:hover {
     background-color: #e0a800;
+}
+
+/* Responsive Design Adjustments */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: center; /* Center items when stacked */
+    }
+
+    .form-container,
+    .list-container {
+        width: 90%; /* Use more of the screen width */
+        margin-bottom: 20px; /* Add space between stacked containers */
+    }
+
+    .list-container {
+        margin-bottom: 0; /* No margin for the last item */
+    }
+
+    .modal-content {
+        width: 90%;
+        margin: 10% auto; /* Adjust margin for smaller screens */
+        padding: 15px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.5em;
+    }
+
+    .modal-content textarea {
+        min-height: 150px; /* Slightly reduce min-height for modal textarea */
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .form-container h2,
+    .list-container h2 {
+        font-size: 1.2em;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .form-container,
+    .list-container {
+        padding: 15px;
+    }
+
+    button,
+    #scriptList a,
+    #scriptList button {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .modal-content {
+        padding: 10px;
+    }
+
+    .modal-content textarea {
+        min-height: 100px;
+    }
+
+    #scriptList li .actions {
+        flex-direction: column; /* Stack action buttons on very small screens */
+        align-items: flex-end; /* Align them to the right */
+    }
+
+    #scriptList li .actions a,
+    #scriptList li .actions button {
+        margin-left: 0; /* Remove left margin when stacked */
+        margin-top: 5px; /* Add top margin for spacing */
+        width: 100%; /* Make buttons take full width of their container */
+        text-align: center;
+    }
+
+    #scriptList li .actions a:first-child,
+    #scriptList li .actions button:first-child {
+        margin-top: 0;
+    }
 } 
