@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    res.send('Hello World');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.post('/upload', (req, res) => {

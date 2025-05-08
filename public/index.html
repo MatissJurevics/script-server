@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Script Manager</h1>
+    <div class="container">
+        <div class="form-container">
+            <h2>Upload Script</h2>
+            <input type="password" id="password" placeholder="Password" required><br>
+            <input type="text" id="scriptName" placeholder="Script Name" required><br>
+            <textarea id="scriptContent" placeholder="Enter script content here" rows="10" required></textarea><br>
+            <button onclick="uploadScript()">Upload Script</button>
+        </div>
+        <div class="list-container">
+            <h2>Available Scripts</h2>
+            <ul id="scriptList"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Script: <span id="editModalScriptName"></span></h2>
+        
+        <label for="editModalScriptContent">Content:</label>
+        <textarea id="editModalScriptContent" rows="15" placeholder="Script content"></textarea>
+        
+        <label for="editModalPassword">Password:</label>
+        <input type="password" id="editModalPassword" placeholder="Enter password to save changes">
+        
+        <button onclick="saveEditedScript()">Save Changes</button>
+    </div>
+</div> 
