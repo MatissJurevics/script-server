@@ -24,17 +24,20 @@ app.get('/', (req, res) => {
 app.post('/upload', (req, res) => {
     const { password, script } = req.body;
     if (password !== PASSWORD) {
+        console.log("Unauthorized User", password, PASSWORD)
         return res.status(401).send('Unauthorized');
     }   
     const scriptName = req.body.scriptName;
     const scriptContent = req.body.scriptContent;
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     fs.writeFileSync(scriptPath, scriptContent);
+    console.log("Script uploaded successfully", scriptName);
     res.send('Script uploaded successfully');
 });
 
 app.get('/scripts', (req, res) => {
     const scripts = fs.readdirSync(path.join(__dirname, 'scripts'));
+    console.log("Scripts Requested");
     res.json(scripts);
 });
 
@@ -42,27 +45,32 @@ app.get('/s/:scriptName', (req, res) => {
     const scriptName = req.params.scriptName;
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     const scriptContent = fs.readFileSync(scriptPath, 'utf8');
+    console.log("Script Requested", scriptName);
     res.send(scriptContent);
 });
 
 app.delete('/s/:scriptName', (req, res) => {
     if (req.body.password !== PASSWORD) {
+        console.log("Unauthorized User", req.body.password, PASSWORD)
         return res.status(401).send('Unauthorized');
     }
     const scriptName = req.params.scriptName;
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     fs.unlinkSync(scriptPath);
+    console.log("Script Deleted", scriptName);
     res.send('Script deleted successfully');
 });
 
 app.put('/s/:scriptName', (req, res) => {
     if (req.body.password !== PASSWORD) {
+        console.log("Unauthorized User", req.body.password, PASSWORD)
         return res.status(401).send('Unauthorized');
     }
     const scriptName = req.params.scriptName;
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     const scriptContent = req.body.scriptContent;
     fs.writeFileSync(scriptPath, scriptContent);
+    console.log("Script Updated", scriptName);
     res.send('Script updated successfully');
 });
 
