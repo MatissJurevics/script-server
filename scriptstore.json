@@ -4,13 +4,39 @@
       "name": "test.sh",
       "content": "echo \"hello World\"; ls",
       "createdAt": "2025-05-09T13:02:41.229Z",
-      "updatedAt": "2025-05-09T13:09:46.880Z"
+      "updatedAt": "2025-05-09T13:09:46.880Z",
+      "tags": [
+        "Linux"
+      ]
     },
     {
       "name": "test.ps1",
       "content": "echo \"hello\"",
       "createdAt": "2025-05-09T13:10:54.130Z",
-      "updatedAt": "2025-05-09T13:10:54.130Z"
+      "updatedAt": "2025-05-09T13:10:54.130Z",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "list.sh",
+      "content": "ls -la",
+      "createdAt": "2025-05-09T13:52:04.519Z",
+      "updatedAt": "2025-05-09T13:52:04.519Z",
+      "tags": [
+        "non-malicious",
+        "Linux",
+        "test"
+      ]
+    },
+    {
+      "name": "pwd.sh",
+      "content": "pwd",
+      "createdAt": "2025-05-09T13:56:34.632Z",
+      "updatedAt": "2025-05-09T13:56:34.632Z",
+      "tags": [
+        "Linux"
+      ]
     }
   ]
 }

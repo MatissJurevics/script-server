@@ -204,6 +204,11 @@
                     <label for="scriptContent">Script Content</label>
                     <textarea id="scriptContent" class="script-textarea" placeholder="// Enter your script code here..." rows="10" required></textarea>
                 </div>
+                
+                <div class="input-group">
+                    <label for="scriptTags">Tags (optional, comma-separated)</label>
+                    <input type="text" id="scriptTags" placeholder="e.g. backup, automation, daily">
+                </div>
             </div>
             
             <div class="upload-btn-container">
@@ -242,6 +247,16 @@
         <div class="modal-body">
             <label for="editModalScriptContent">Content:</label>
             <textarea id="editModalScriptContent" rows="15" placeholder="Script content"></textarea>
+            
+            <div class="tag-input-container">
+                <label>Tags:</label>
+                <div id="editModalTagContainer" class="tag-container"></div>
+                
+                <div class="tag-input-wrapper">
+                    <input type="text" id="tagInput" class="tag-input" placeholder="Add a tag..." />
+                    <button class="add-tag-btn" onclick="addTag()">Add</button>
+                </div>
+            </div>
         </div>
         
         <div class="modal-footer">
@@ -262,6 +277,11 @@
         <div class="modal-body">
             <label for="viewModalScriptContent">Content:</label>
             <textarea id="viewModalScriptContent" rows="15" placeholder="Script content" readonly></textarea>
+            
+            <div class="tag-input-container">
+                <label>Tags:</label>
+                <div id="viewModalTagContainer" class="tag-container"></div>
+            </div>
         </div>
         
         <div class="modal-footer">

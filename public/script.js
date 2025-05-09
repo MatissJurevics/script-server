@@ -2,6 +2,16 @@ let currentMainScriptName = null;
 let currentViewingScriptName = null;
 let scriptToDelete = null;
 let toastTimeout = null;
+let scriptDataCache = null;
+let lastScriptDataFetch = 0;
+const CACHE_TIMEOUT = 30000; // 30 seconds cache
+
+// Store the current editing script's tags
+let currentEditingTags = [];
+
+// Create a single context menu element to reuse
+let currentContextMenu = null;
+let activeScriptName = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchCurrentMainScriptName(); // Fetch initially
@@ -10,16 +20,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add event listeners for input fields to enhance user experience
     const scriptNameInput = document.getElementById('scriptName');
     const scriptContentTextarea = document.getElementById('scriptContent');
+    const scriptTagsInput = document.getElementById('scriptTags');
     
     // Auto-focus the script name input when page loads
     scriptNameInput.focus();
     
-    // Add keyboard shortcut (Ctrl+Enter) to submit the form
+    // Add keyboard shortcut (Ctrl+Enter) to submit the form from any input field
     scriptContentTextarea.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.key === 'Enter') {
             uploadScript();
         }
     });
+    
+    // Add Ctrl+Enter support to the script name input
+    scriptNameInput.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            uploadScript();
+        }
+    });
+    
+    // Add Ctrl+Enter support to the tags input
+    if (scriptTagsInput) {
+        scriptTagsInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                uploadScript();
+            }
+        });
+    }
 });
 
 // Toast Notification System
@@ -120,12 +147,140 @@ async function fetchCurrentMainScriptName() {
     }
 }
 
+// Function to close any open context menu
+function closeContextMenu() {
+    if (currentContextMenu) {
+        currentContextMenu.classList.remove('active');
+        setTimeout(() => {
+            if (currentContextMenu && currentContextMenu.parentNode) {
+                currentContextMenu.parentNode.removeChild(currentContextMenu);
+                currentContextMenu = null;
+                activeScriptName = null;
+            }
+        }, 150);
+    }
+}
+
+// Add click event listener to document to close context menu when clicking outside
+document.addEventListener('click', function(e) {
+    // If the click is outside the context menu and not on a dropdown button
+    if (currentContextMenu && !e.target.closest('.context-menu') && !e.target.closest('.script-actions-dropdown')) {
+        closeContextMenu();
+    }
+});
+
+// Function to show context menu for a script
+function showContextMenu(scriptName, isMainScript, event, sourceType = 'button') {
+    // Close any open menu first
+    closeContextMenu();
+    
+    // Set current active script
+    activeScriptName = scriptName;
+    
+    // Create menu container
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    
+    // Get position for menu placement (either from button or mouse event)
+    let top, left;
+    
+    if (sourceType === 'button' && event instanceof HTMLElement) {
+        // Button source - use button position
+        const button = event;
+        const rect = button.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+        
+        top = rect.bottom + scrollTop;
+        left = rect.left + scrollLeft;
+    } else if (sourceType === 'contextmenu' && event instanceof MouseEvent) {
+        // Right-click source - use cursor position
+        event.preventDefault(); // Prevent default context menu
+        top = event.pageY;
+        left = event.pageX;
+    } else {
+        // Fallback
+        return;
+    }
+    
+    // Create menu items
+    const viewItem = createMenuItem('View', 'view-action', () => openViewModal(scriptName));
+    const editItem = createMenuItem('Edit', 'edit-action', () => openEditModal(scriptName));
+    
+    // Handle Set as Main item conditionally
+    const mainItem = createMenuItem('Set as Main', 'main-action', () => setAsMainScript(scriptName));
+    if (isMainScript) {
+        mainItem.classList.add('disabled');
+        mainItem.onclick = null; // Remove click handler if disabled
+    }
+    
+    const separator = document.createElement('div');
+    separator.className = 'context-menu-separator';
+    
+    const deleteItem = createMenuItem('Delete', 'delete-action', () => deleteScript(scriptName));
+    
+    // Add items to menu
+    menu.appendChild(viewItem);
+    menu.appendChild(editItem);
+    menu.appendChild(mainItem);
+    menu.appendChild(separator);
+    menu.appendChild(deleteItem);
+    
+    // Check if menu would go off bottom of screen
+    const menuHeight = 5 * 36; // Approximation based on item height
+    if (top + menuHeight > window.innerHeight + (window.scrollY || document.documentElement.scrollTop)) {
+        top = top - menuHeight;
+    }
+    
+    // Check if menu would go off right side of screen
+    const menuWidth = 150; // Approximate menu width
+    if (left + menuWidth > window.innerWidth + (window.scrollX || document.documentElement.scrollLeft)) {
+        left = left - menuWidth;
+    }
+    
+    // Position menu
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+    
+    // Add to document
+    document.body.appendChild(menu);
+    currentContextMenu = menu;
+    
+    // Activate with a small delay for animation
+    setTimeout(() => {
+        menu.classList.add('active');
+    }, 10);
+}
+
+// Helper to create menu items
+function createMenuItem(text, className, onClick) {
+    const item = document.createElement('div');
+    item.className = `context-menu-item ${className}`;
+    item.textContent = text;
+    item.onclick = (e) => {
+        e.stopPropagation();
+        closeContextMenu();
+        onClick();
+    };
+    return item;
+}
+
 async function fetchScripts() {
+    // First get all script data from the scriptData endpoint
+    const scriptData = await getAllScriptData(true);
+    
+    // Then get the simple list of script names for ordering
     const response = await fetch('/scripts');
     const scripts = await response.json();
+    
     const scriptList = document.getElementById('scriptList');
     scriptList.innerHTML = ''; // Clear existing list
+    
     scripts.forEach(scriptName => {
+        // Find full script data including tags
+        const scriptInfo = scriptData.find(s => s.scriptName === scriptName) || { tags: [] };
+        const tags = scriptInfo.tags || [];
+        
         const listItem = document.createElement('li');
         
         const nameSpanContainer = document.createElement('div');
@@ -134,12 +289,27 @@ async function fetchScripts() {
         nameSpan.textContent = scriptName;
         nameSpanContainer.appendChild(nameSpan);
 
+        // Add tags to the name container if there are any
+        if (tags.length > 0) {
+            const tagsContainer = document.createElement('div');
+            tagsContainer.classList.add('tag-container', 'script-list-tags');
+            
+            tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.classList.add('tag');
+                tagElement.textContent = tag;
+                tagsContainer.appendChild(tagElement);
+            });
+            
+            nameSpanContainer.appendChild(tagsContainer);
+        }
+
         if (scriptName === currentMainScriptName) {
             listItem.classList.add('main-script-indicator');
             const mainIndicator = document.createElement('span');
             mainIndicator.textContent = ' (Main)';
             mainIndicator.classList.add('main-indicator-text');
-            nameSpanContainer.appendChild(mainIndicator);
+            nameSpan.appendChild(mainIndicator);
         }
         
         // Track clicks for differentiating between single and double clicks
@@ -172,39 +342,29 @@ async function fetchScripts() {
                 clickCount = 0;
             }
         });
+        
+        // Add right-click event listener for context menu
+        listItem.addEventListener('contextmenu', (event) => {
+            showContextMenu(scriptName, scriptName === currentMainScriptName, event, 'contextmenu');
+        });
 
+        // Create the actions container with dropdown
         const actionsContainer = document.createElement('div');
         actionsContainer.classList.add('actions');
 
-        const viewButton = document.createElement('button');
-        viewButton.textContent = 'View';
-        viewButton.classList.add('view-button');
-        viewButton.onclick = () => openViewModal(scriptName);
+        // Create dropdown button
+        const dropdownButton = document.createElement('button');
+        dropdownButton.classList.add('script-actions-dropdown');
+        dropdownButton.innerHTML = `Actions <span class="dropdown-icon">▾</span>`;
+        dropdownButton.onclick = (e) => {
+            e.stopPropagation(); // Prevent triggering the row click
+            showContextMenu(scriptName, scriptName === currentMainScriptName, dropdownButton, 'button');
+        };
 
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
-        editButton.classList.add('edit-button');
-        editButton.onclick = () => openEditModal(scriptName);
+        // Add dropdown to actions container
+        actionsContainer.appendChild(dropdownButton);
 
-        const setAsMainButton = document.createElement('button');
-        setAsMainButton.textContent = 'Set as Main';
-        setAsMainButton.classList.add('set-main-button');
-        setAsMainButton.onclick = () => setAsMainScript(scriptName);
-        // Disable button if it's already the main script
-        if (scriptName === currentMainScriptName) {
-            setAsMainButton.disabled = true;
-            setAsMainButton.classList.add('disabled-button');
-        }
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => deleteScript(scriptName);
-
-        actionsContainer.appendChild(viewButton);
-        actionsContainer.appendChild(editButton);
-        actionsContainer.appendChild(setAsMainButton);
-        actionsContainer.appendChild(deleteButton);
-
+        // Add containers to list item
         listItem.appendChild(nameSpanContainer);
         listItem.appendChild(actionsContainer);
         scriptList.appendChild(listItem);
@@ -217,10 +377,15 @@ async function uploadScript() {
 
     const scriptNameInput = document.getElementById('scriptName');
     const scriptContentInput = document.getElementById('scriptContent');
+    const scriptTagsInput = document.getElementById('scriptTags');
     const uploadButton = document.querySelector('.upload-btn');
     
     const scriptName = scriptNameInput.value.trim();
     const scriptContent = scriptContentInput.value;
+    const tagString = scriptTagsInput.value.trim();
+    
+    // Parse tags from comma-separated string
+    const tags = tagString ? tagString.split(',').map(tag => tag.trim()).filter(tag => tag !== '') : [];
     
     // Validate inputs with helpful messages
     if (!scriptName) {
@@ -242,36 +407,56 @@ async function uploadScript() {
     uploadButton.style.opacity = '0.7';
     
     try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password, scriptName, scriptContent }),
-        });
+        // First upload the script
+        const uploadResponse = await fetch('/upload', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password, scriptName, scriptContent }),
+    });
 
-        const responseText = await response.text();
-        
-        if (response.ok) {
-            showToast(`Script "${scriptName}" uploaded successfully.`, 'success');
-            
-            // Clear the form
-            scriptNameInput.value = '';
-            scriptContentInput.value = '';
-            
-            // Focus on the name field for the next upload
-            scriptNameInput.focus();
-            
-            // Refresh the list of scripts
-            fetchScripts();
-        } else if (response.status === 401) {
-            // If unauthorized, redirect to login page
-            window.location.href = '/login.html?error=auth';
-        } else {
-            showToast(responseText, 'error');
+        if (!uploadResponse.ok) {
+            if (uploadResponse.status === 401) {
+                window.location.href = '/login.html?error=auth';
+                return;
+            }
+            throw new Error(await uploadResponse.text());
         }
+        
+        // If tags were provided, set them using the tags endpoint
+        if (tags.length > 0) {
+            const tagsResponse = await fetch(`/tags/${scriptName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password, tags }),
+            });
+            
+            if (!tagsResponse.ok) {
+                console.warn('Tags were not saved successfully:', await tagsResponse.text());
+                // Continue anyway since the script was uploaded
+            }
+        }
+        
+        // Force refresh the script data cache
+        await getAllScriptData(true);
+        
+        showToast(`Script "${scriptName}" uploaded successfully.`, 'success');
+        
+        // Clear the form
+        scriptNameInput.value = '';
+        scriptContentInput.value = '';
+        scriptTagsInput.value = '';
+        
+        // Focus on the name field for the next upload
+        scriptNameInput.focus();
+        
+        // Refresh the list of scripts
+        fetchScripts();
     } catch (error) {
-        showToast('Network error. Please try again.', 'error');
+        showToast(error.message || 'Network error. Please try again.', 'error');
     } finally {
         // Reset button state
         uploadButton.textContent = originalText;
@@ -282,6 +467,9 @@ async function uploadScript() {
 
 // Enhanced modal functions
 function openModal(modalId) {
+    // Close any open context menu
+    closeContextMenu();
+    
     const modal = document.getElementById(modalId);
     modal.style.display = 'block';
     
@@ -359,6 +547,177 @@ function handleModalKeydown(event) {
 // Store the name of the script currently being edited
 let currentEditingScriptName = null;
 
+// Add a helper function to get all script data with caching
+async function getAllScriptData(forceRefresh = false) {
+    const now = Date.now();
+    
+    // Use cached data if available and not expired
+    if (scriptDataCache && !forceRefresh && (now - lastScriptDataFetch < CACHE_TIMEOUT)) {
+        return scriptDataCache;
+    }
+    
+    try {
+        // Fetch all script data from the scriptData endpoint
+        const response = await fetch('/scriptData');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch script data: ${response.status}`);
+        }
+        
+        const scriptDataArray = await response.json();
+        
+        // Update cache
+        scriptDataCache = scriptDataArray;
+        lastScriptDataFetch = now;
+        
+        return scriptDataArray;
+    } catch (error) {
+        console.error('Error fetching script data:', error);
+        throw error;
+    }
+}
+
+// Add a helper function to get script data by name
+async function getScriptDataByName(scriptName, forceRefresh = false) {
+    try {
+        // Get all script data (potentially from cache)
+        const scriptDataArray = await getAllScriptData(forceRefresh);
+        
+        // Find the script with the matching name
+        const scriptData = scriptDataArray.find(script => script.scriptName === scriptName);
+        
+        if (!scriptData) {
+            throw new Error(`Script "${scriptName}" not found`);
+        }
+        
+        return scriptData;
+    } catch (error) {
+        console.error('Error fetching script data:', error);
+        throw error;
+    }
+}
+
+// Function to render tags in the edit modal
+function renderEditTags() {
+    const tagContainer = document.getElementById('editModalTagContainer');
+    tagContainer.innerHTML = '';
+    
+    currentEditingTags.forEach(tag => {
+        const tagElement = document.createElement('span');
+        tagElement.classList.add('tag');
+        tagElement.innerHTML = `
+            ${tag}
+            <span class="tag-remove" data-tag="${tag}" onclick="removeTag('${tag}')">×</span>
+        `;
+        tagContainer.appendChild(tagElement);
+    });
+}
+
+// Function to add a new tag
+async function addTag() {
+    const tagInput = document.getElementById('tagInput');
+    const tag = tagInput.value.trim();
+    
+    if (tag === '') {
+        return;
+    }
+    
+    // Don't add duplicate tags
+    if (currentEditingTags.includes(tag)) {
+        showToast(`Tag "${tag}" already exists`, 'error');
+        return;
+    }
+    
+    // Add tag to local array
+    currentEditingTags.push(tag);
+    
+    try {
+        // Get password for authentication
+        const password = getPassword();
+        if (!password) return;
+        
+        // Update tags on the server using the dedicated endpoint
+        const response = await fetch(`/tags/${currentEditingScriptName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                tags: currentEditingTags,
+                password 
+            }),
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to add tag: ${response.statusText}`);
+        }
+        
+        // Re-render tags and refresh cache
+        renderEditTags();
+        await getAllScriptData(true);
+        
+        // Clear the input
+        tagInput.value = '';
+        tagInput.focus();
+        
+    } catch (error) {
+        // If there was an error, remove the tag from the local array
+        currentEditingTags = currentEditingTags.filter(t => t !== tag);
+        renderEditTags();
+        showToast(`Error adding tag: ${error.message}`, 'error');
+    }
+}
+
+// Function to remove a tag
+async function removeTag(tag) {
+    // Store the current tags in case we need to revert
+    const previousTags = [...currentEditingTags];
+    
+    // Remove the tag from the local array first for immediate feedback
+    currentEditingTags = currentEditingTags.filter(t => t !== tag);
+    renderEditTags();
+    
+    try {
+        // Get password for authentication
+        const password = getPassword();
+        if (!password) return;
+        
+        // Use the DELETE endpoint to remove the tag
+        const response = await fetch(`/tags/${currentEditingScriptName}/${tag}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+    });
+
+        if (!response.ok) {
+            throw new Error(`Failed to remove tag: ${response.statusText}`);
+        }
+        
+        // If successful, refresh the script data cache
+        await getAllScriptData(true);
+        
+    } catch (error) {
+        // If there was an error, restore the previous tag array
+        currentEditingTags = previousTags;
+        renderEditTags();
+        showToast(`Error removing tag: ${error.message}`, 'error');
+    }
+}
+
+// Add event listener for tag input
+document.addEventListener('DOMContentLoaded', () => {
+    const tagInput = document.getElementById('tagInput');
+    if (tagInput) {
+        tagInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag();
+            }
+        });
+    }
+});
+
 async function openEditModal(scriptName) {
     const password = getPassword();
     if (!password) return; // getPassword will redirect if no password
@@ -366,13 +725,16 @@ async function openEditModal(scriptName) {
     currentEditingScriptName = scriptName;
     
     try {
-        // Fetch the script content
-        const response = await fetch(`/s/${scriptName}`);
-        const scriptContent = await response.text();
+        // Fetch the script content using the new endpoint
+        const scriptData = await getScriptDataByName(scriptName);
+        
+        // Set the current editing tags
+        currentEditingTags = scriptData.tags || [];
         
         // Populate the modal
         document.getElementById('editModalScriptName').textContent = scriptName;
-        document.getElementById('editModalScriptContent').value = scriptContent;
+        document.getElementById('editModalScriptContent').value = scriptData.content;
+        renderEditTags();
         
         // Display the modal
         openModal('editModal');
@@ -384,32 +746,41 @@ async function openEditModal(scriptName) {
 function closeEditModal() {
     closeModal('editModal');
     currentEditingScriptName = null;
+    currentEditingTags = [];
 }
 
 async function saveEditedScript() {
     const password = getPassword();
     if (!password) return; // getPassword will redirect if no password
-    
+
     const scriptContent = document.getElementById('editModalScriptContent').value;
     if (!scriptContent) {
         showToast('Script content cannot be empty', 'error');
         return;
     }
-    
-    const response = await fetch(`/s/${currentEditingScriptName}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password, scriptContent }),
-    });
-    
-    const responseText = await response.text();
-    
-    if (response.ok) {
+
+        const response = await fetch(`/s/${currentEditingScriptName}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        body: JSON.stringify({ 
+            password, 
+            scriptContent
+            // Tags are now managed through dedicated tag endpoints
+        }),
+        });
+
+        const responseText = await response.text();
+
+        if (response.ok) {
+        // Force refresh script data cache after updating
+        await getAllScriptData(true);
+        
         showToast(`Script "${currentEditingScriptName}" updated successfully.`, 'success');
-        closeEditModal();
-    } else if (response.status === 401) {
+            closeEditModal();
+        fetchScripts(); // Refresh list to show updated tags
+        } else if (response.status === 401) {
         // If unauthorized, redirect to login page
         window.location.href = '/login.html?error=auth';
     } else {
@@ -417,17 +788,40 @@ async function saveEditedScript() {
     }
 }
 
+// Function to render tags in the view modal (read-only)
+function renderViewTags(tags) {
+    const tagContainer = document.getElementById('viewModalTagContainer');
+    tagContainer.innerHTML = '';
+    
+    if (!tags || tags.length === 0) {
+        const noTagsMsg = document.createElement('span');
+        noTagsMsg.textContent = 'No tags';
+        noTagsMsg.style.color = '#6b6b8a';
+        noTagsMsg.style.fontStyle = 'italic';
+        noTagsMsg.style.fontSize = '0.9em';
+        tagContainer.appendChild(noTagsMsg);
+        return;
+    }
+    
+    tags.forEach(tag => {
+        const tagElement = document.createElement('span');
+        tagElement.classList.add('tag');
+        tagElement.textContent = tag;
+        tagContainer.appendChild(tagElement);
+    });
+}
+
 async function openViewModal(scriptName) {
     currentViewingScriptName = scriptName;
     
     try {
-        // Fetch the script content
-        const response = await fetch(`/s/${scriptName}`);
-        const scriptContent = await response.text();
+        // Fetch the script content using the new endpoint
+        const scriptData = await getScriptDataByName(scriptName);
         
         // Populate the modal
         document.getElementById('viewModalScriptName').textContent = scriptName;
-        document.getElementById('viewModalScriptContent').value = scriptContent;
+        document.getElementById('viewModalScriptContent').value = scriptData.content;
+        renderViewTags(scriptData.tags);
         
         // Display the modal
         openModal('viewModal');
@@ -478,7 +872,7 @@ async function setAsMainScript(scriptName) {
     
     // Show a loading toast
     const loadingToast = showToast(`Setting "${scriptName}" as main script...`, 'success');
-    
+
     try {
         const response = await fetch('/main', {
             method: 'POST',
@@ -487,9 +881,9 @@ async function setAsMainScript(scriptName) {
             },
             body: JSON.stringify({ password, fileName: scriptName }),
         });
-        
+
         const responseText = await response.text();
-        
+
         if (response.ok) {
             showToast(`Script "${scriptName}" set as main script.`, 'success');
             currentMainScriptName = scriptName;
@@ -506,6 +900,9 @@ async function setAsMainScript(scriptName) {
 }
 
 function deleteScript(scriptName) {
+    // Close any open context menu
+    closeContextMenu();
+    
     // Set the script to delete and open the confirmation modal
     scriptToDelete = scriptName;
     document.getElementById('deleteScriptName').textContent = scriptName;
@@ -539,6 +936,9 @@ async function confirmScriptDeletion() {
     closeDeleteConfirmModal();
     
     if (response.ok) {
+        // Force refresh script data cache after deletion
+        await getAllScriptData(true);
+        
         showToast(`Script "${scriptToDelete}" deleted successfully.`, 'success');
         fetchScripts(); // Refresh the list
     } else if (response.status === 401) {

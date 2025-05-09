@@ -135,15 +135,14 @@ button:hover {
 }
 
 #scriptList li {
-    padding: 12px;
-    border-bottom: 1px solid #3a3a50;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.2s ease-in-out;
     cursor: pointer;
     position: relative;
-    user-select: none;
+    border-bottom: 1px solid #3a3a50;
+    padding: 12px 15px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 #scriptList li:hover {
@@ -164,7 +163,7 @@ button:hover {
 
 /* Show tooltip on hover to indicate click functionality */
 #scriptList li:hover::after {
-    content: "Click to view • Double-click to set as main";
+    content: "Click to view • Double-click to set as main • Right-click for actions";
     position: absolute;
     bottom: -25px;
     left: 10px;
@@ -178,15 +177,18 @@ button:hover {
     pointer-events: none;
     z-index: 10;
     animation: fade-in 0.3s ease forwards 0.5s;
+    white-space: nowrap;
 }
 
 #scriptList li.main-script-indicator:hover::after {
-    content: "Click to view • This is the main script";
+    content: "Click to view • This is the main script • Right-click for actions";
 }
 
 #scriptList li .script-name {
     flex-grow: 1;
     margin-right: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 #scriptList li .script-name:hover {
@@ -680,4 +682,206 @@ button:hover {
 
 .list-container ul {
     padding-right: 5px; /* Consistent with form-content */
+}
+
+/* Tag styles */
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #383850;
+    color: #e0e0f0;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    user-select: none;
+    border: 1px solid #4a4a64;
+}
+
+.script-list-tags {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.script-list-tags .tag {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    background-color: #2e2e3e;
+}
+
+.tag-remove {
+    cursor: pointer;
+    margin-left: 5px;
+    width: 14px;
+    height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #4a4a64;
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+.tag-remove:hover {
+    background: #cc6699;
+}
+
+.tag-input-container {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    border-top: 1px solid #3a3a50;
+    padding-top: 10px;
+}
+
+.tag-input-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #a389f4;
+}
+
+.tag-input-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.tag-input {
+    flex-grow: 1;
+    padding: 6px 10px;
+    background-color: #1e1e2c;
+    border: 1px solid #4a4a64;
+    border-radius: 4px;
+    color: #e0e0f0;
+    font-family: 'Courier New', monospace;
+}
+
+.tag-input:focus {
+    outline: none;
+    border-color: #a389f4;
+}
+
+.add-tag-btn {
+    padding: 4px 10px;
+    background: #2e2e3e;
+    color: #e0e0f0;
+    border: 1px solid #3a3a50;
+    border-bottom: 2px solid #7986cb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s ease;
+}
+
+.add-tag-btn:hover {
+    background: #383850;
+    color: #7986cb;
+}
+
+/* Dropdown and Context Menu Styles */
+.script-actions-dropdown {
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: #2e2e3e;
+    color: #e0e0f0;
+    border: 1px solid #3a3a50;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.script-actions-dropdown:hover {
+    background: #383850;
+    box-shadow: 0 0 3px rgba(163, 137, 244, 0.3);
+}
+
+.dropdown-icon {
+    margin-left: 5px;
+    font-size: 0.9em;
+    transition: transform 0.2s ease;
+}
+
+.context-menu {
+    position: absolute;
+    z-index: 100;
+    background-color: #252535;
+    border: 1px solid #3a3a50;
+    border-radius: 4px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    min-width: 150px;
+    display: none;
+    overflow: hidden;
+}
+
+.context-menu.active {
+    display: block;
+    animation: fadeIn 0.15s ease-in;
+}
+
+.context-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+    color: #e0e0f0;
+}
+
+.context-menu-item:hover {
+    background-color: #2e2e3e;
+}
+
+.context-menu-item.view-action:hover {
+    border-left: 3px solid #42a5f5;
+    padding-left: 9px;
+    color: #42a5f5;
+}
+
+.context-menu-item.edit-action:hover {
+    border-left: 3px solid #7986cb;
+    padding-left: 9px;
+    color: #7986cb;
+}
+
+.context-menu-item.main-action:hover {
+    border-left: 3px solid #cc6699;
+    padding-left: 9px;
+    color: #cc6699;
+}
+
+.context-menu-item.delete-action:hover {
+    border-left: 3px solid #f06292;
+    padding-left: 9px;
+    color: #f06292;
+}
+
+.context-menu-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.context-menu-item.disabled:hover {
+    background-color: transparent;
+    border-left: none;
+    padding-left: 12px;
+    color: #e0e0f0;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: #3a3a50;
+    margin: 4px 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 } 

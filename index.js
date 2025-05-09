@@ -139,6 +139,14 @@ app.get('/s/:scriptName', (req, res) => {
 });
 
 app.get("/main", (req, res) => {
+    const usagePath = path.join(__dirname, 'usage.json');
+    const usage = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
+    usage.push({
+        timestamp: new Date().toISOString(),
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+    });
+    fs.writeFileSync(usagePath, JSON.stringify(usage, null, 2));
     const mainFiles = fs.readdirSync(__dirname)
         .filter(file => file.startsWith('main.'))
         .map(file => ({ name: file, path: path.join(__dirname, file) }));
@@ -150,6 +158,88 @@ app.get("/main", (req, res) => {
     } else {
         res.status(404).send('Main file not found');
     }
+});
+
+app.get("/usage", (req, res) => {
+    const usagePath = path.join(__dirname, 'usage.json');
+    const usage = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
+    res.json(usage);
+});
+
+
+/**
+ * Get all tags or specific script tags
+ * 
+ * @param {string} scriptName - The name of the script to get tags for **Returns all unique tags if no scriptName is provided**
+ * @returns {Array} - An array of tags
+ * 
+ */
+app.get("/tags/:scriptName", (req, res) => {
+    const { scriptName } = req.params;
+    
+    const scriptStorePath = path.join(__dirname, 'scriptstore.json');
+    const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));
+
+    if (!scriptName) {
+        let uniqueTags = [];
+        scriptStore.scripts.forEach(script => {
+            script.tags.forEach(tag => {
+                if (!uniqueTags.includes(tag)) {
+                    uniqueTags.push(tag);
+                }
+            });
+        });
+        return res.json(uniqueTags);
+    }
+    const script = scriptStore.scripts.find(script => script.name === scriptName);
+    if (!script) {
+        return res.status(404).send('Script not found');
+    }
+    res.json(script.tags);
+});
+
+app.post("/tags/:scriptName", (req, res) => {
+    const { scriptName } = req.params;
+    const { tags } = req.body;
+    const scriptStorePath = path.join(__dirname, 'scriptstore.json');
+    const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));
+    scriptStore.scripts.find(script => script.name === scriptName).tags = tags;
+    fs.writeFileSync(scriptStorePath, JSON.stringify(scriptStore, null, 2));
+    res.status(200).send('Tags updated successfully');
+});
+
+app.delete("/tags/:scriptName/:tag", (req, res) => {
+    const { scriptName, tag } = req.params;
+    const scriptStorePath = path.join(__dirname, 'scriptstore.json');
+    const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));
+    scriptStore.scripts.find(script => script.name === scriptName).tags = scriptStore.scripts.find(script => script.name === scriptName).tags.filter(t => t !== tag);
+    fs.writeFileSync(scriptStorePath, JSON.stringify(scriptStore, null, 2));
+    res.status(200).send('Tag deleted successfully');
+});
+
+app.get("/scriptData", (req, res) => {
+    const scriptStorePath = path.join(__dirname, 'scriptstore.json');
+    const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));
+    const scriptData = scriptStore.scripts.map(script => {
+        const scriptName = script.name;
+        if (script.tags) {
+            return {
+                scriptName,
+                tags: script.tags,
+                content: script.content,
+                createdAt: script.createdAt,
+                updatedAt: script.updatedAt
+            };
+        }
+        return {
+            scriptName,
+            tags: [],
+            content: script.content,
+            createdAt: script.createdAt,
+            updatedAt: script.updatedAt
+        };
+    });
+    res.json(scriptData);
 });
 
 const CURRENT_MAIN_SCRIPT_CONFIG_PATH = path.join(__dirname, 'current_main_script.json');
