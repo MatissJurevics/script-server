@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,11 +16,42 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookieParser());
 
+// Authentication routes first
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    console.log("Request received for index.html");
+    console.log(req.cookies);
+    if (req.cookies.scriptManagerPassword === PASSWORD) {
+        console.log("Password is correct");
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else {
+        console.log("Password is incorrect");
+        res.redirect('/login');
+    }
 });
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { password } = req.body;
+    if (password === PASSWORD) {
+        // Set cookie with password
+        res.cookie('scriptManagerPassword', password, { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    }
+});
+
+// Static files after authentication routes
+app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.post('/upload', (req, res) => {
     const { password, script } = req.body;

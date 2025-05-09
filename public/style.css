@@ -1,82 +1,110 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', monospace;
     margin: 0;
     padding: 20px;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #1a1a24;
+    color: #d0d0e0;
+    line-height: 1.6;
 }
 
 h1 {
     text-align: center;
-    color: #333;
+    color: #a389f4;
+    font-size: 2.5em;
+    margin-bottom: 0;
+    margin-top: 0;
 }
 
-.password-container {
+.header-container {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    background-color: #fff;
-    padding: 15px;
-    margin: 0 auto 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    flex-wrap: wrap;
+    margin-bottom: 30px;
 }
 
-.password-container input {
-    flex: 1;
-    min-width: 200px;
-    margin-right: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.password-container button {
-    margin: 0 5px;
-    white-space: nowrap;
-}
-
-#passwordStatus {
-    margin-left: 10px;
-    color: #28a745;
-    font-weight: bold;
+h2 {
+    color: #a389f4;
+    margin-top: 0;
 }
 
 .container {
     display: flex;
     justify-content: space-around;
     margin-top: 20px;
+    gap: 20px;
 }
 
 .form-container, .list-container {
-    background-color: #fff;
+    background-color: #252535;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     width: 45%;
+    border: 1px solid #3a3a50;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.form-container {
+    background-image: linear-gradient(to bottom, #252535, #23232f);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    border-top: 3px solid #5c6bc0;
+}
+
+.form-container:hover, .list-container:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
 }
 
 input[type="text"], input[type="password"], textarea {
     width: calc(100% - 22px);
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    border: 1px solid #4a4a64;
+    border-radius: 5px;
+    background-color: #1e1e2c;
+    color: #e0e0f0;
+    font-family: 'Courier New', monospace;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    outline: none;
+    border-color: #a389f4;
+    box-shadow: 0 0 3px rgba(163, 137, 244, 0.3);
+}
+
+/* Style the scrollbar for textareas */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: #1e1e2c;
     border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #3a3a50;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #4a4a64;
 }
 
 button {
     padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
+    background: linear-gradient(135deg, #5c6bc0 0%, #cc6699 100%);
+    color: #ffffff;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s ease;
 }
 
 button:hover {
-    background-color: #0056b3;
+    opacity: 0.9;
+    box-shadow: 0 0 5px rgba(163, 137, 244, 0.4);
 }
 
 #scriptList {
@@ -85,8 +113,8 @@ button:hover {
 }
 
 #scriptList li {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    padding: 12px;
+    border-bottom: 1px solid #3a3a50;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -94,7 +122,7 @@ button:hover {
 }
 
 #scriptList li:hover {
-    background-color: #e9ecef;
+    background-color: #2e2e3e;
 }
 
 #scriptList li .script-name {
@@ -105,85 +133,159 @@ button:hover {
 #scriptList li .actions {
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 #scriptList li:last-child {
     border-bottom: none;
 }
 
-#scriptList button {
-    margin-left: 10px;
-    background-color: #dc3545;
-}
-
-#scriptList button:hover {
-    background-color: #c82333;
-}
-
 #scriptList a {
     text-decoration: none;
-    color: #007bff;
+    color: #a389f4;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #2e2e3e;
+    transition: all 0.2s ease;
 }
 
 #scriptList a:hover {
-    text-decoration: underline;
+    background-color: #3a3a4e;
+    text-decoration: none;
+    box-shadow: 0 0 5px rgba(163, 137, 244, 0.3);
+}
+
+#scriptList button {
+    margin-left: 0;
+    padding: 6px 10px;
+    font-size: 0.85em;
+    border-radius: 4px;
+    opacity: 0.85;
+    box-shadow: none;
+    background: #2e2e3e;
+    color: #e0e0f0;
+    border: 1px solid #3a3a50;
+    transition: all 0.2s ease;
+}
+
+#scriptList button:hover {
+    opacity: 1;
+    background: #383850;
+    box-shadow: 0 0 3px rgba(163, 137, 244, 0.3);
+}
+
+#scriptList .edit-button {
+    border-bottom: 2px solid #7986cb;
+}
+
+#scriptList .edit-button:hover {
+    color: #7986cb;
+}
+
+#scriptList .view-button {
+    border-bottom: 2px solid #42a5f5;
+}
+
+#scriptList .view-button:hover {
+    color: #42a5f5;
+}
+
+#scriptList .set-main-button {
+    border-bottom: 2px solid #cc6699;
+}
+
+#scriptList .set-main-button:hover {
+    color: #cc6699;
+}
+
+#scriptList button.set-main-button.disabled-button {
+    background: #2e2e3e;
+    color: #8a8a9a;
+    opacity: 0.6;
+    border-bottom: 2px solid #8a8a9a;
+    cursor: not-allowed;
+}
+
+#scriptList button:last-child {
+    border-bottom: 2px solid #f06292;
+}
+
+#scriptList button:last-child:hover {
+    color: #f06292;
+}
+
+.main-script-indicator {
+    background-color: #2d2d45 !important;
+    border-left: 5px solid #a389f4;
+}
+
+.main-indicator-text {
+    font-weight: bold;
+    color: #cc6699;
+    font-size: 0.9em;
+    margin-left: 5px;
 }
 
 /* Modal Styles */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    display: none;
+    position: fixed;
+    z-index: 1;
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
     padding-top: 60px;
 }
 
 .modal-content {
-    background-color: #fefefe;
+    background-color: #252535;
     margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
+    padding: 25px;
+    border: 1px solid #3a3a50;
     width: 80%;
     max-width: 700px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
 }
 
 .modal-content h2 {
     margin-top: 0;
+    color: #a389f4;
 }
 
 .modal-content label {
     display: block;
-    margin-top: 10px;
+    margin-top: 15px;
     margin-bottom: 5px;
+    color: #e0e0f0;
 }
 
 .modal-content textarea {
     width: calc(100% - 22px);
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    min-height: 200px; /* Ensure ample space for script content */
+    margin-bottom: 15px;
+    border: 1px solid #4a4a64;
+    border-radius: 5px;
+    background-color: #1e1e2c;
+    color: #e0e0f0;
+    min-height: 200px;
 }
 
 .modal-content input[type="password"] {
     width: calc(100% - 22px);
     padding: 10px;
-    margin-bottom: 20px; /* More space before the save button */
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #4a4a64;
+    border-radius: 5px;
+    background-color: #1e1e2c;
+    color: #e0e0f0;
 }
 
 .close-button {
-    color: #aaa;
+    color: #8a8a9a;
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -191,85 +293,31 @@ button:hover {
 
 .close-button:hover,
 .close-button:focus {
-    color: black;
+    color: #cc6699;
     text-decoration: none;
     cursor: pointer;
-}
-
-#scriptList .edit-button {
-    margin-left: 10px;
-    background-color: #ffc107; /* Yellow for edit */
-    color: black;
-}
-
-#scriptList .edit-button:hover {
-    background-color: #e0a800;
-}
-
-#scriptList .set-main-button {
-    margin-left: 10px;
-    background-color: #28a745; /* Green for set as main */
-    color: white;
-}
-
-#scriptList .set-main-button:hover {
-    background-color: #218838;
-}
-
-#scriptList .set-main-button.disabled-button {
-    background-color: #6c757d; /* Grey out if disabled */
-    cursor: not-allowed;
-}
-
-.main-script-indicator {
-    background-color: #d4edda !important; /* Light green background for main script */
-    border-left: 5px solid #28a745; /* Green left border */
-}
-
-.main-indicator-text {
-    font-weight: bold;
-    color: #155724; /* Darker green text */
-    font-size: 0.9em;
-    margin-left: 5px;
 }
 
 /* Responsive Design Adjustments */
 @media screen and (max-width: 800px) {
     .container {
         flex-direction: column;
-        align-items: center; /* Center items when stacked */
-    }
-
-    .password-container {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 15px;
-    }
-
-    .password-container input,
-    .password-container button {
-        margin: 5px 0;
-        width: 100%;
-    }
-
-    .password-container #passwordStatus {
-        margin: 5px 0;
-        text-align: center;
+        align-items: center;
     }
 
     .form-container,
     .list-container {
-        width: 90%; /* Use more of the screen width */
-        margin-bottom: 20px; /* Add space between stacked containers */
+        width: 90%;
+        margin-bottom: 20px;
     }
 
     .list-container {
-        margin-bottom: 0; /* No margin for the last item */
+        margin-bottom: 0;
     }
 
     .modal-content {
         width: 90%;
-        margin: 10% auto; /* Adjust margin for smaller screens */
+        margin: 10% auto;
         padding: 15px;
     }
 
@@ -278,7 +326,7 @@ button:hover {
     }
 
     .modal-content textarea {
-        min-height: 150px; /* Slightly reduce min-height for modal textarea */
+        min-height: 150px;
     }
 
     h1 {
@@ -324,20 +372,15 @@ button:hover {
     }
 
     #scriptList li .actions {
-        flex-direction: column; /* Stack action buttons on very small screens */
-        align-items: flex-end; /* Align them to the right */
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
     }
 
     #scriptList li .actions a,
     #scriptList li .actions button {
-        margin-left: 0; /* Remove left margin when stacked */
-        margin-top: 5px; /* Add top margin for spacing */
-        width: 100%; /* Make buttons take full width of their container */
+        margin-left: 0;
+        width: 100%;
         text-align: center;
-    }
-
-    #scriptList li .actions a:first-child,
-    #scriptList li .actions button:first-child {
-        margin-top: 0;
     }
 } 

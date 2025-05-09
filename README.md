@@ -1,5 +1,7 @@
 # Script downloader: A Basic HTTP Server for downloading scripts using the ATTiny 85
 
+![screenshot](./screenshot.png)
+
 ## Overview
 
 This is a basic HTTP server that allows you to download scripts using the ATTiny 85 microcontroller.
