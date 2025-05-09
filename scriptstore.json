@@ -37,6 +37,24 @@
       "tags": [
         "Linux"
       ]
+    },
+    {
+      "name": "Hello.ps1",
+      "content": "echo \"hello from the other side\"",
+      "createdAt": "2025-05-09T14:23:52.432Z",
+      "updatedAt": "2025-05-09T14:23:52.433Z",
+      "tags": [
+        "Windows"
+      ]
+    },
+    {
+      "name": "neofetch.sh",
+      "content": "neofetch | lolcat",
+      "createdAt": "2025-05-09T14:24:09.412Z",
+      "updatedAt": "2025-05-09T14:24:09.412Z",
+      "tags": [
+        "Linux"
+      ]
     }
   ]
 }

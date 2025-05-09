@@ -13,6 +13,12 @@ let currentEditingTags = [];
 let currentContextMenu = null;
 let activeScriptName = null;
 
+// Filter state variables
+let nameFilter = '';
+let selectedTags = [];
+let allAvailableTags = [];
+let allScriptsData = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchCurrentMainScriptName(); // Fetch initially
     fetchScripts(); // Then fetch and render scripts
@@ -265,110 +271,378 @@ function createMenuItem(text, className, onClick) {
     return item;
 }
 
-async function fetchScripts() {
-    // First get all script data from the scriptData endpoint
-    const scriptData = await getAllScriptData(true);
+// Function to create the filter UI
+function createFilterUI() {
+    const filterSection = document.createElement('div');
+    filterSection.className = 'filter-section';
     
-    // Then get the simple list of script names for ordering
-    const response = await fetch('/scripts');
-    const scripts = await response.json();
+    // Create the name filter row
+    const filterRow = document.createElement('div');
+    filterRow.className = 'filter-row';
     
+    // Create the search input container
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'filter-input-container';
+    
+    
+    
+    // Create the search input
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'filter-input';
+    searchInput.placeholder = 'Filter scripts by name...';
+    searchInput.addEventListener('input', function() {
+        nameFilter = this.value.trim().toLowerCase();
+        renderFilteredScripts();
+    });
+    inputContainer.appendChild(searchInput);
+    
+    // Create tag dropdown container
+    const tagDropdownContainer = document.createElement('div');
+    tagDropdownContainer.className = 'tag-dropdown-container';
+    
+    // Create tag dropdown button
+    const tagDropdownButton = document.createElement('div');
+    tagDropdownButton.className = 'tag-dropdown-button';
+    tagDropdownButton.innerHTML = `Filter by tags <span class="dropdown-icon">▾</span>`;
+    tagDropdownButton.onclick = toggleTagDropdown;
+    tagDropdownContainer.appendChild(tagDropdownButton);
+    
+    // Create tag dropdown menu
+    const tagDropdownMenu = document.createElement('div');
+    tagDropdownMenu.id = 'tagDropdownMenu';
+    tagDropdownMenu.className = 'tag-dropdown-menu';
+    tagDropdownContainer.appendChild(tagDropdownMenu);
+    
+    // Create clear button
+    const clearButton = document.createElement('button');
+    clearButton.className = 'filter-clear';
+    clearButton.textContent = 'Clear';
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        nameFilter = '';
+        selectedTags = [];
+        renderFilteredScripts();
+        renderTagDropdown(); // Re-render tags to clear active state
+        updateSelectedTagsDisplay(); // Clear selected tags display
+    });
+    
+    // Add elements to the filter row
+    filterRow.appendChild(inputContainer);
+    filterRow.appendChild(tagDropdownContainer);
+    filterRow.appendChild(clearButton);
+    
+    // Create selected tags display container
+    const selectedTagsContainer = document.createElement('div');
+    selectedTagsContainer.id = 'selectedTagsContainer';
+    selectedTagsContainer.className = 'filter-selected-tags';
+    
+    // Add elements to the filter section
+    filterSection.appendChild(filterRow);
+    filterSection.appendChild(selectedTagsContainer);
+    
+    // Set up click listener to close dropdown when clicking elsewhere
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('tagDropdownMenu');
+        const dropdownButton = dropdown?.parentElement.querySelector('.tag-dropdown-button');
+        
+        if (dropdown && dropdown.classList.contains('active') && 
+            !dropdown.contains(e.target) && e.target !== dropdownButton) {
+            dropdown.classList.remove('active');
+        }
+    });
+    
+    return filterSection;
+}
+
+// Toggle tag dropdown visibility
+function toggleTagDropdown(e) {
+    e.stopPropagation();
+    const dropdown = document.getElementById('tagDropdownMenu');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+        
+        // If opening the dropdown, render its contents
+        if (dropdown.classList.contains('active')) {
+            renderTagDropdown();
+        }
+    }
+}
+
+// Function to render the tag dropdown items
+function renderTagDropdown() {
+    const tagDropdownMenu = document.getElementById('tagDropdownMenu');
+    if (!tagDropdownMenu) return;
+    
+    tagDropdownMenu.innerHTML = '';
+    
+    // Sort tags alphabetically
+    allAvailableTags.sort();
+    
+    if (allAvailableTags.length === 0) {
+        const noTagsItem = document.createElement('div');
+        noTagsItem.className = 'tag-dropdown-item';
+        noTagsItem.textContent = 'No tags available';
+        noTagsItem.style.fontStyle = 'italic';
+        noTagsItem.style.color = '#6b6b8a';
+        tagDropdownMenu.appendChild(noTagsItem);
+        return;
+    }
+    
+    allAvailableTags.forEach(tag => {
+        const tagItem = document.createElement('div');
+        tagItem.className = `tag-dropdown-item ${selectedTags.includes(tag) ? 'active' : ''}`;
+        
+        const checkbox = document.createElement('div');
+        checkbox.className = 'checkbox';
+        tagItem.appendChild(checkbox);
+        
+        const tagText = document.createElement('span');
+        tagText.textContent = tag;
+        tagItem.appendChild(tagText);
+        
+        tagItem.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleTagFilter(tag);
+            this.classList.toggle('active');
+        });
+        
+        tagDropdownMenu.appendChild(tagItem);
+    });
+}
+
+// Update the display of selected tags
+function updateSelectedTagsDisplay() {
+    const container = document.getElementById('selectedTagsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (selectedTags.length === 0) {
+        return;
+    }
+    
+    selectedTags.forEach(tag => {
+        const tagElement = document.createElement('div');
+        tagElement.className = 'selected-tag';
+        tagElement.innerHTML = `
+            ${tag}
+            <span class="selected-tag-remove" data-tag="${tag}">×</span>
+        `;
+        
+        const removeButton = tagElement.querySelector('.selected-tag-remove');
+        removeButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const tag = this.getAttribute('data-tag');
+            toggleTagFilter(tag);
+        });
+        
+        container.appendChild(tagElement);
+    });
+}
+
+// Function to toggle a tag in the filter
+function toggleTagFilter(tag) {
+    const index = selectedTags.indexOf(tag);
+    if (index === -1) {
+        selectedTags.push(tag);
+    } else {
+        selectedTags.splice(index, 1);
+    }
+    
+    // Update UI
+    renderTagDropdown();
+    updateSelectedTagsDisplay();
+    renderFilteredScripts();
+}
+
+// Function to extract all unique tags from scripts
+function extractAllTags(scriptData) {
+    const tagSet = new Set();
+    scriptData.forEach(script => {
+        if (script.tags && Array.isArray(script.tags)) {
+            script.tags.forEach(tag => tagSet.add(tag));
+        }
+    });
+    return Array.from(tagSet);
+}
+
+// Function to apply filters and render scripts
+function renderFilteredScripts() {
     const scriptList = document.getElementById('scriptList');
-    scriptList.innerHTML = ''; // Clear existing list
+    scriptList.innerHTML = '';
     
-    scripts.forEach(scriptName => {
-        // Find full script data including tags
-        const scriptInfo = scriptData.find(s => s.scriptName === scriptName) || { tags: [] };
-        const tags = scriptInfo.tags || [];
-        
-        const listItem = document.createElement('li');
-        
-        const nameSpanContainer = document.createElement('div');
-        nameSpanContainer.classList.add('script-name');
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = scriptName;
-        nameSpanContainer.appendChild(nameSpan);
+    // Apply filters to the script data
+    let filteredScripts = allScriptsData.filter(script => {
+        const nameMatch = !nameFilter || script.scriptName.toLowerCase().includes(nameFilter);
+        const tagMatch = selectedTags.length === 0 || 
+            (script.tags && selectedTags.every(tag => script.tags.includes(tag)));
+        return nameMatch && tagMatch;
+    });
+    
+    // Update filter count - moved to bottom of container
+    const filterCount = document.getElementById('filterCount');
+    if (filterCount) {
+        filterCount.textContent = `Showing ${filteredScripts.length} of ${allScriptsData.length} scripts`;
+    }
+    
+    // Show no results message if needed
+    if (filteredScripts.length === 0) {
+        const noResults = document.createElement('li');
+        noResults.className = 'no-results';
+        noResults.textContent = 'No scripts match your filters';
+        scriptList.appendChild(noResults);
+        return;
+    }
+    
+    // Render filtered scripts
+    filteredScripts.forEach(script => {
+        renderScriptListItem(script);
+    });
+}
 
-        // Add tags to the name container if there are any
-        if (tags.length > 0) {
-            const tagsContainer = document.createElement('div');
-            tagsContainer.classList.add('tag-container', 'script-list-tags');
-            
-            tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.classList.add('tag');
-                tagElement.textContent = tag;
-                tagsContainer.appendChild(tagElement);
-            });
-            
-            nameSpanContainer.appendChild(tagsContainer);
-        }
+// Helper function to render a single script list item
+function renderScriptListItem(script) {
+    const scriptName = script.scriptName;
+    const tags = script.tags || [];
+    const scriptList = document.getElementById('scriptList');
+    
+    const listItem = document.createElement('li');
+    
+    const nameSpanContainer = document.createElement('div');
+    nameSpanContainer.classList.add('script-name');
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = scriptName;
+    nameSpanContainer.appendChild(nameSpan);
 
-        if (scriptName === currentMainScriptName) {
-            listItem.classList.add('main-script-indicator');
-            const mainIndicator = document.createElement('span');
-            mainIndicator.textContent = ' (Main)';
-            mainIndicator.classList.add('main-indicator-text');
-            nameSpan.appendChild(mainIndicator);
+    // Add tags to the name container if there are any
+    if (tags.length > 0) {
+        const tagsContainer = document.createElement('div');
+        tagsContainer.classList.add('tag-container', 'script-list-tags');
+        
+        tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.classList.add('tag');
+            tagElement.textContent = tag;
+            tagsContainer.appendChild(tagElement);
+        });
+        
+        nameSpanContainer.appendChild(tagsContainer);
+    }
+
+    if (scriptName === currentMainScriptName) {
+        listItem.classList.add('main-script-indicator');
+        const mainIndicator = document.createElement('span');
+        mainIndicator.textContent = ' (Main)';
+        mainIndicator.classList.add('main-indicator-text');
+        nameSpan.appendChild(mainIndicator);
+    }
+    
+    // Track clicks for differentiating between single and double clicks
+    let clickCount = 0;
+    let clickTimer = null;
+    
+    // Add click handler for both single and double clicks
+    listItem.addEventListener('click', (event) => {
+        // Ignore clicks on buttons or inside the actions container
+        if (event.target.closest('.actions')) {
+            return;
         }
         
-        // Track clicks for differentiating between single and double clicks
-        let clickCount = 0;
-        let clickTimer = null;
+        clickCount++;
         
-        // Add click handler for both single and double clicks
-        listItem.addEventListener('click', (event) => {
-            // Ignore clicks on buttons or inside the actions container
-            if (event.target.closest('.actions')) {
-                return;
-            }
-            
-            clickCount++;
-            
-            if (clickCount === 1) {
-                clickTimer = setTimeout(() => {
-                    if (clickCount === 1) {
-                        // Single click - view the script
-                        openViewModal(scriptName);
-                    }
-                    clickCount = 0;
-                }, 300);
-            } else if (clickCount === 2) {
-                clearTimeout(clickTimer);
-                // Double click - set as main (if not already main)
-                if (scriptName !== currentMainScriptName) {
-                    setAsMainScript(scriptName);
+        if (clickCount === 1) {
+            clickTimer = setTimeout(() => {
+                if (clickCount === 1) {
+                    // Single click - view the script
+                    openViewModal(scriptName);
                 }
                 clickCount = 0;
+            }, 300);
+        } else if (clickCount === 2) {
+            clearTimeout(clickTimer);
+            // Double click - set as main (if not already main)
+            if (scriptName !== currentMainScriptName) {
+                setAsMainScript(scriptName);
             }
+            clickCount = 0;
+        }
+    });
+    
+    // Add right-click event listener for context menu
+    listItem.addEventListener('contextmenu', (event) => {
+        showContextMenu(scriptName, scriptName === currentMainScriptName, event, 'contextmenu');
+    });
+
+    // Create the actions container with dropdown
+    const actionsContainer = document.createElement('div');
+    actionsContainer.classList.add('actions');
+
+    // Create dropdown button
+    const dropdownButton = document.createElement('button');
+    dropdownButton.classList.add('script-actions-dropdown');
+    dropdownButton.innerHTML = `Actions <span class="dropdown-icon">▾</span>`;
+    dropdownButton.onclick = (e) => {
+        e.stopPropagation(); // Prevent triggering the row click
+        showContextMenu(scriptName, scriptName === currentMainScriptName, dropdownButton, 'button');
+    };
+
+    // Add dropdown to actions container
+    actionsContainer.appendChild(dropdownButton);
+
+    // Add containers to list item
+    listItem.appendChild(nameSpanContainer);
+    listItem.appendChild(actionsContainer);
+    scriptList.appendChild(listItem);
+}
+
+async function fetchScripts() {
+    try {
+        // First get all script data from the scriptData endpoint
+        allScriptsData = await getAllScriptData(true);
+        
+        // Then get the simple list of script names for ordering (to maintain order from server)
+        const response = await fetch('/scripts');
+        const scriptNames = await response.json();
+        
+        // Make sure allScriptsData is in the same order as the server's script list
+        allScriptsData = scriptNames.map(name => {
+            return allScriptsData.find(s => s.scriptName === name) || { scriptName: name, tags: [] };
         });
         
-        // Add right-click event listener for context menu
-        listItem.addEventListener('contextmenu', (event) => {
-            showContextMenu(scriptName, scriptName === currentMainScriptName, event, 'contextmenu');
-        });
-
-        // Create the actions container with dropdown
-        const actionsContainer = document.createElement('div');
-        actionsContainer.classList.add('actions');
-
-        // Create dropdown button
-        const dropdownButton = document.createElement('button');
-        dropdownButton.classList.add('script-actions-dropdown');
-        dropdownButton.innerHTML = `Actions <span class="dropdown-icon">▾</span>`;
-        dropdownButton.onclick = (e) => {
-            e.stopPropagation(); // Prevent triggering the row click
-            showContextMenu(scriptName, scriptName === currentMainScriptName, dropdownButton, 'button');
-        };
-
-        // Add dropdown to actions container
-        actionsContainer.appendChild(dropdownButton);
-
-        // Add containers to list item
-        listItem.appendChild(nameSpanContainer);
-        listItem.appendChild(actionsContainer);
-        scriptList.appendChild(listItem);
-    });
+        // Extract all available tags
+        allAvailableTags = extractAllTags(allScriptsData);
+        
+        // Get the list container
+        const listContainer = document.querySelector('.list-container');
+        const scriptList = document.getElementById('scriptList');
+        
+        // Add filter UI if it doesn't exist
+        if (!document.querySelector('.filter-section')) {
+            listContainer.insertBefore(createFilterUI(), scriptList);
+            renderTagDropdown();
+            updateSelectedTagsDisplay();
+            
+            // Create or update filter count element at the bottom of the container
+            let filterCount = document.getElementById('filterCount');
+            if (!filterCount) {
+                filterCount = document.createElement('div');
+                filterCount.id = 'filterCount';
+                filterCount.className = 'filter-count';
+                listContainer.appendChild(filterCount);
+            }
+        } else {
+            // Just update the tag filters
+            renderTagDropdown();
+            updateSelectedTagsDisplay();
+        }
+        
+        // Render filtered scripts
+        renderFilteredScripts();
+    } catch (error) {
+        console.error('Error fetching scripts:', error);
+        showToast('Failed to fetch scripts. Please try again.', 'error');
+    }
 }
 
 async function uploadScript() {
@@ -440,7 +714,7 @@ async function uploadScript() {
             }
         }
         
-        // Force refresh the script data cache
+        // Force refresh the script data cache and update tag filters
         await getAllScriptData(true);
         
         showToast(`Script "${scriptName}" uploaded successfully.`, 'success');
@@ -453,7 +727,7 @@ async function uploadScript() {
         // Focus on the name field for the next upload
         scriptNameInput.focus();
         
-        // Refresh the list of scripts
+        // Refresh the list of scripts including filters
         fetchScripts();
     } catch (error) {
         showToast(error.message || 'Network error. Please try again.', 'error');
@@ -655,6 +929,13 @@ async function addTag() {
         renderEditTags();
         await getAllScriptData(true);
         
+        // Update filter tags if needed (if tag is new)
+        if (!allAvailableTags.includes(tag)) {
+            allAvailableTags.push(tag);
+            allAvailableTags.sort();
+            renderTagDropdown();
+        }
+        
         // Clear the input
         tagInput.value = '';
         tagInput.focus();
@@ -696,6 +977,18 @@ async function removeTag(tag) {
         
         // If successful, refresh the script data cache
         await getAllScriptData(true);
+        
+        // Check if we need to update the available tags (if this tag is no longer used by any script)
+        const scriptData = await getAllScriptData(false); // Use cached data
+        const tagsStillInUse = extractAllTags(scriptData);
+        
+        if (!tagsStillInUse.includes(tag)) {
+            // Remove tag from available tags and filter selection if it's there
+            allAvailableTags = allAvailableTags.filter(t => t !== tag);
+            selectedTags = selectedTags.filter(t => t !== tag);
+            renderTagDropdown();
+            updateSelectedTagsDisplay();
+        }
         
     } catch (error) {
         // If there was an error, restore the previous tag array
@@ -774,18 +1067,18 @@ async function saveEditedScript() {
         const responseText = await response.text();
 
         if (response.ok) {
-        // Force refresh script data cache after updating
-        await getAllScriptData(true);
-        
-        showToast(`Script "${currentEditingScriptName}" updated successfully.`, 'success');
+            // Force refresh script data cache after updating
+            await getAllScriptData(true);
+            
+            showToast(`Script "${currentEditingScriptName}" updated successfully.`, 'success');
             closeEditModal();
-        fetchScripts(); // Refresh list to show updated tags
+            fetchScripts(); // Refresh list to show updated tags and maintain filter state
         } else if (response.status === 401) {
-        // If unauthorized, redirect to login page
-        window.location.href = '/login.html?error=auth';
-    } else {
-        showToast(responseText, 'error');
-    }
+            // If unauthorized, redirect to login page
+            window.location.href = '/login.html?error=auth';
+        } else {
+            showToast(responseText, 'error');
+        }
 }
 
 // Function to render tags in the view modal (read-only)
@@ -939,8 +1232,11 @@ async function confirmScriptDeletion() {
         // Force refresh script data cache after deletion
         await getAllScriptData(true);
         
+        // Check if the deleted script had a tag that is currently being filtered
+        // If so, we may need to update the available tags list
+        fetchScripts(); // This will update tags and maintain filter state appropriately
+        
         showToast(`Script "${scriptToDelete}" deleted successfully.`, 'success');
-        fetchScripts(); // Refresh the list
     } else if (response.status === 401) {
         // If unauthorized, redirect to login page
         window.location.href = '/login.html?error=auth';

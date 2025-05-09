@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Script Manager</title>
     <link rel="stylesheet" href="style.css">
     <style>
@@ -10,59 +10,91 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-left: 20px;
-            margin-right: 20px;
-            margin-bottom: 20px;
+            margin-left: 1.25rem;
+            margin-right: 1.25rem;
+            margin-bottom: 1.25rem;
         }
         
         .logout-btn {
-            background: linear-gradient(135deg, #cc6699 0%, #5c6bc0 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 15px;
+            background-color: #2e2e3e;
+            border: 1px solid #3a3a50;
+            color: #e0e0f0;
+            font-size: 0.9em;
+            padding: 0 0.75rem;
+            height: 2.25rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
             cursor: pointer;
             font-family: 'Courier New', monospace;
-            transition: all 0.2s ease;
-            font-size: 14px;
+            display: flex;
+            align-items: center;
         }
         
         .logout-btn:hover {
-            opacity: 0.9;
-            box-shadow: 0 0 5px rgba(163, 137, 244, 0.4);
+            background-color: #383850;
+            color: #f06292;
+        }
+        
+        .settings-btn {
+            background-color: #2e2e3e;
+            border: 1px solid #3a3a50;
+            color: #e0e0f0;
+            font-size: 0.9em;
+            padding: 0 0.75rem;
+            height: 2.25rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            margin-right: 0.625rem;
+        }
+        
+        .settings-btn:hover {
+            background-color: #383850;
+            color: #a389f4;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 0.625rem;
+            align-items: center;
         }
         
         .modal-footer {
-            margin-top: 20px;
+            margin-top: 1.25rem;
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 0.625rem;
         }
         
         .download-btn {
-            background: linear-gradient(135deg, #5c6bc0 0%, #3949ab 100%);
+            background: #5c6bc0;
         }
         
         .confirm-modal-content {
-            max-width: 450px;
-            padding: 20px;
+            max-width: 28.125rem;
+            padding: 1.25rem;
             text-align: center;
         }
         
         .confirm-modal-footer {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
+            gap: 0.9375rem;
+            margin-top: 1.5625rem;
         }
         
         .confirm-modal-message {
-            margin-bottom: 15px;
+            margin-bottom: 0.9375rem;
             line-height: 1.6;
         }
         
         .confirm-btn {
-            background: linear-gradient(135deg, #f06292 0%, #ec407a 100%);
+            background: #f06292;
         }
         
         .cancel-btn {
@@ -72,14 +104,14 @@
         
         /* Enhanced Upload Form Styling */
         .form-container {
-            padding: 25px !important;
+            padding: 1.5625rem !important;
         }
         
         .form-container h2 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
             position: relative;
-            padding-bottom: 10px;
+            padding-bottom: 0.625rem;
         }
         
         .form-container h2:after {
@@ -88,20 +120,20 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 2px;
+            width: 2.5rem;
+            height: 0.125rem;
             background: #4a4a64;
-            border-radius: 2px;
+            border-radius: 0.125rem;
         }
         
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 0.9375rem;
             position: relative;
         }
         
         .input-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 0.375rem;
             color: #d0d0e0;
             font-size: 0.9em;
         }
@@ -109,11 +141,11 @@
         .input-group input, 
         .input-group textarea {
             width: 100%;
-            padding: 10px;
+            padding: 0.625rem;
             margin: 0;
             background-color: #1e1e2c;
             border: 1px solid #3a3a50;
-            border-radius: 4px;
+            border-radius: 0.25rem;
             box-sizing: border-box;
             transition: all 0.2s ease;
         }
@@ -121,32 +153,30 @@
         .input-group input:focus, 
         .input-group textarea:focus {
             border-color: #5c6bc0;
-            box-shadow: 0 0 3px rgba(92, 107, 192, 0.2);
+            box-shadow: 0 0 0.1875rem rgba(92, 107, 192, 0.2);
         }
-        
-        /* Upload button styles moved to CSS file */
         
         /* Toast Notification System */
         #toast-container {
             position: fixed;
-            bottom: 20px;
+            bottom: 1.25rem;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            width: 300px;
+            gap: 0.625rem;
+            width: 18.75rem;
         }
         
         .toast {
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 0.75rem 0.9375rem;
+            border-radius: 0.5rem;
             color: white;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            font-size: 0.875rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.4);
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(1.25rem);
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
@@ -159,13 +189,13 @@
         }
         
         .toast-success {
-            background: linear-gradient(135deg, #42a5f5 0%, #7986cb 100%);
-            border-left: 5px solid #42a5f5;
+            background: #42a5f5;
+            border-left: 5px solid #2196f3;
         }
         
         .toast-error {
-            background: linear-gradient(135deg, #f06292 0%, #ec407a 100%);
-            border-left: 5px solid #f06292;
+            background: #f06292;
+            border-left: 5px solid #e91e63;
         }
         
         .toast-message {
@@ -174,20 +204,110 @@
         
         .toast-close {
             cursor: pointer;
-            font-size: 16px;
-            margin-left: 10px;
+            font-size: 1rem;
+            margin-left: 0.625rem;
             opacity: 0.7;
         }
         
         .toast-close:hover {
             opacity: 1;
         }
+        
+        .settings-section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #3a3a50;
+            padding-bottom: 15px;
+        }
+        
+        .settings-section h3 {
+            color: #a389f4;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .setting-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .setting-item label {
+            min-width: 150px;
+            margin-bottom: 0 !important;
+        }
+        
+        .setting-item select, 
+        .setting-item input[type="checkbox"] {
+            margin-right: 15px;
+            background-color: #1e1e2c;
+            border: 1px solid #4a4a64;
+            color: #e0e0f0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .setting-item input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 15px;
+        }
+        
+        .setting-description {
+            color: #8a8a9a;
+            font-size: 0.85em;
+            margin-left: 5px;
+            font-style: italic;
+        }
+        
+        .change-password-btn {
+            background-color: #2e2e3e;
+            color: #e0e0f0;
+            border: 1px solid #3a3a50;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        @media screen and (max-width: 48em) { /* 768px */
+            .header-container {
+                margin-left: 0.625rem;
+                margin-right: 0.625rem;
+                margin-bottom: 1rem;
+            }
+            
+            #toast-container {
+                width: 90%;
+                max-width: 18.75rem;
+            }
+            
+            .form-container {
+                padding: 1.25rem !important;
+            }
+        }
+        
+        @media screen and (max-width: 30em) { /* 480px */
+            .header-buttons {
+                flex-direction: row;
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .setting-item {
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header-container">
         <h1>Script Manager</h1>
-        <button class="logout-btn" onclick="logout()">LOG OUT</button>
+        <div class="header-buttons">
+            <button class="logout-btn" onclick="logout()">LOG OUT</button>
+            <button class="settings-btn">SETTINGS</button>
+        </div>
     </div>
     
     <div class="container">
@@ -234,6 +354,48 @@
             // Redirect to login page
             window.location.href = '/login.html';
         }
+        
+        // Settings Modal Functions
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'block';
+            
+            // Trigger animation after a small delay
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            
+            // Add ESC key listener for modal
+            document.addEventListener('keydown', handleSettingsModalKeydown);
+        }
+        
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('show');
+            
+            // Wait for animation to finish before hiding
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+            
+            // Remove ESC key listener
+            document.removeEventListener('keydown', handleSettingsModalKeydown);
+        }
+        
+        function handleSettingsModalKeydown(event) {
+            // Handle ESC key to close modal
+            if (event.key === 'Escape') {
+                closeSettingsModal();
+            }
+        }
+        
+        // Add event listener to settings button
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingsBtn = document.querySelector('.settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', openSettingsModal);
+            }
+        });
     </script>
 </body>
 </html>
@@ -310,5 +472,61 @@
         </div>
         
         <div class="keyboard-hint">Press Enter to confirm </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeSettingsModal()">&times;</span>
+        <h2>Settings</h2>
+        
+        <div class="modal-body">
+            <div class="settings-section">
+                <h3>Display Options</h3>
+                <div class="setting-item">
+                    <label for="darkModeToggle">Dark Mode</label>
+                    <input type="checkbox" id="darkModeToggle" checked disabled>
+                    <span class="setting-description">Enable dark theme (always on)</span>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="scriptListLimit">Scripts Per Page</label>
+                    <select id="scriptListLimit" disabled>
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="setting-description">Coming in future update</span>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Security Options</h3>
+                <div class="setting-item">
+                    <label for="sessionTimeout">Session Timeout</label>
+                    <select id="sessionTimeout" disabled>
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 hour</option>
+                        <option value="120">2 hours</option>
+                        <option value="240">4 hours</option>
+                    </select>
+                    <span class="setting-description">Coming in future update</span>
+                </div>
+                
+                <div class="setting-item">
+                    <button class="change-password-btn" disabled>Change Password</button>
+                    <span class="setting-description">Coming in future update</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeSettingsModal()">Close</button>
+            <button class="save-btn" disabled>Save Changes</button>
+        </div>
+        
+        <div class="keyboard-hint">Settings functionality coming soon • ESC to close</div>
     </div>
 </div> 
