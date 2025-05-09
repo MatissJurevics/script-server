@@ -12,16 +12,13 @@ COPY bun.lock ./
 RUN bun install
 
 # Create necessary directories
-RUN mkdir -p scripts public/icons
+RUN mkdir -p scripts public
 
 # Copy the public directory first (for better layer caching)
 COPY public ./public/
 
 # Bundle the rest of the app source
 COPY . .
-
-# Ensure proper permissions
-RUN chmod +x public/icons/create_icons.sh
 
 # Create default configuration files if they don't exist
 RUN touch scriptstore.json usage.json settings.json current_main_script.json
