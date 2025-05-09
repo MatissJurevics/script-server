@@ -539,6 +539,8 @@ button:hover {
     .container {
         flex-direction: column;
         align-items: center;
+        margin-left: 0.625rem;
+        margin-right: 0.625rem;
     }
     
     .form-container, .list-container {
@@ -547,6 +549,9 @@ button:hover {
         margin-bottom: 1.25rem; /* 20px to rem */
         max-height: none !important;
         height: auto;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 1rem; /* Reduced padding on tablet */
     }
     
     .form-container {
@@ -610,14 +615,37 @@ button:hover {
         font-size: 1.25rem;
     }
     
+    .container {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .form-container, .list-container {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 0.5rem;
+        padding: 0.875rem; /* Even smaller padding on mobile */
+        box-sizing: border-box;
+    }
+    
     .header-container {
         flex-direction: column;
         gap: 0.9375rem; /* 15px to rem */
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
     }
     
     .modal-content {
-        width: 95%;
+        width: 100%;
         padding: 0.9375rem; /* 15px to rem */
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 0.5rem;
+        box-sizing: border-box;
     }
     
     #scriptList li {
@@ -639,6 +667,14 @@ button:hover {
 @media screen and (max-width: 20em) { /* 320px */
     html {
         font-size: 12px;
+    }
+    
+    body {
+        padding: 0.5rem;
+    }
+    
+    .form-container, .list-container {
+        padding: 0.75rem;
     }
     
     .toast {
