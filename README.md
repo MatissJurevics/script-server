@@ -1,112 +1,71 @@
-# Script Manager 📜✨
+# Script downloader: A Basic HTTP Server for downloading scripts using the ATTiny 85
 
 ![screenshot](./screenshot.png)
 
-## Overview 🔍
+## Overview
 
-Script Manager is a powerful web-based application that helps you organize, store, and manage your scripts. It provides a modern interface for script management with analytics capabilities and AI assistance.
+This is a basic HTTP server that allows you to download scripts using the ATTiny 85 microcontroller.
 
-## Features 🚀
+## Features
 
-- **Script Management**
-  - 📥 Upload scripts to your personal repository
-  - 📤 Download scripts to any device
-  - 🔄 Update existing scripts with new versions
-  - 🏷️ Tag scripts for better organization
-  - 🔍 Search and filter scripts
+- Download scripts from the server
+- Upload scripts to the server
+- Delete scripts from the server
+- Update scripts on the server
+- List all scripts on the server
 
-- **Security**
-  - 🔐 Password-protected access
-  - 🔒 Secure API endpoints
-  - 👤 User authentication
+## Usage
 
-- **Analytics**
-  - 📊 Track script usage over time
-  - 📈 Monitor connections and downloads
-  - 📆 Filter data by various time periods
+- Run the server: `node index.js`
+- Upload a script: `curl -X POST http://localhost:3000/upload -H "Content-Type: application/json" -d '{"password": "password", "scriptName": "script.js", "scriptContent": "console.log('Hello, world!');"}'`
+- Download a script: `curl http://localhost:3000/s/script.js`
+- Delete a script: `curl -X DELETE http://localhost:3000/s/script.js`
+- Update a script: `curl -X PUT http://localhost:3000/s/script.js -H "Content-Type: application/json" -d '{"password": "password", "scriptContent": "console.log('Hello, world!');"}'`
 
-- **AI Assistant**
-  - 🤖 Get help with your scripts
-  - 💡 Generate script content with AI
-  - 🔧 Troubleshoot and debug issues
+## Docker Usage
 
-## Installation 🛠️
+1.  **Build the Docker image:**
+    ```bash
+    docker build -t script-downloader .
+    ```
 
-### Prerequisites
+2.  **Run the Docker container:**
+    ```bash
+    docker run -p 3000:3000 -d script-downloader
+    ```
+    This command maps port 3000 of the container to port 3000 on your host machine and runs the container in detached mode (`-d`).
 
-- Node.js (v14 or later)
-- npm or Bun package manager
+Once the container is running, you can interact with the server using the same `curl` commands as listed in the "Usage" section, as the port `3000` is forwarded. For example:
 
-### Installation Steps
+- Download a script: `curl http://localhost:3000/s/script.js`
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/script-manager.git
-   cd script-manager
-   ```
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   # or if using Bun
-   bun install
-   ```
+## Docs
 
-3. **Create a .env file:**
-   ```
-   PASSWORD=your_secure_password
-   ```
+### Upload a script
 
-4. **Start the server:**
-   ```bash
-   npm start
-   # or if using Bun
-   bun start
-   ```
+```bash
+curl -X POST http://localhost:3000/upload -H "Content-Type: application/json" -d '{"password": "password", "scriptName": "script.js", "scriptContent": "console.log('Hello, world!');"}'
+```
 
-5. **Access the application:**
-   Open your browser and navigate to `http://localhost:8080`
 
-## Docker Usage 🐳
+### Download a script
 
-1. **Build the Docker image:**
-   ```bash
-   docker build -t script-manager .
-   ```
+```bash
+curl http://localhost:3000/s/script.js
+```
 
-2. **Run the Docker container:**
-   ```bash
-   docker run -p 8080:8080 -d script-manager
-   ```
 
-## Usage Guide 📖
+### Delete a script
 
-### Web Interface
+```bash
+curl -X DELETE http://localhost:3000/s/script.js
+```
 
-1. **Login** with your password
-2. **Upload scripts** using the upload form
-3. **Manage scripts** from the available scripts list
-4. **Download scripts** when needed
-5. **Add tags** to organize your scripts
-6. **View analytics** to track usage
-7. **Adjust settings** to customize your experience
 
-#
-## Analytics Dashboard 📊
+### Update a script
 
-The analytics dashboard provides insights into:
+```bash
+curl -X PUT http://localhost:3000/s/script.js -H "Content-Type: application/json" -d '{"password": "password", "scriptContent": "console.log('Hello, world!');"}'
+```
 
-- Script usage over time
-- Recent connections
-- User agents
-- Time-based trends
-
-Filter the data by different time periods: last 10 minutes, hour, day, week, or month.
-
-## Contributing 🤝
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License 📄
-
-This project is licensed under the MIT License with Commons Clause - see the [LICENSE](LICENSE) file for details.
