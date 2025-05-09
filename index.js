@@ -166,7 +166,7 @@ app.get("/main", (req, res) => {
     const usagePath = path.join(__dirname, 'usage.json');
     const usage = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
     usage.push({
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(),
         ip: req.ip,
         userAgent: req.headers['user-agent']
     });
