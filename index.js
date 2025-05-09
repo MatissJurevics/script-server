@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import OpenAI from 'openai';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +15,28 @@ dotenv.config();
 
 const PASSWORD = process.env.PASSWORD;
 const PORT = 8080;
+
 const app = express();
+const server = createServer(app);
+const io = new Server(server); // Attach Socket.IO to the HTTP server
+
+
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+});
+
+fs.watch(path.join(__dirname, 'usage.json'), (event, filename) => {
+    if (event === 'change') {
+        const usage = JSON.parse(fs.readFileSync(path.join(__dirname, 'usage.json'), 'utf8'));
+        console.log('usageChange');
+        io.emit('usageChange', usage);
+    }
+});
+
+
+
+
 
 const updateJSON = () => {
     const jsonPath = path.join(__dirname, 'scriptstore.json');
@@ -477,7 +500,7 @@ if (!fs.existsSync(scriptsDir)) {
     fs.mkdirSync(scriptsDir, { recursive: true });
 }
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Use password ${PASSWORD} to login`);
 });
