@@ -141,6 +141,37 @@ async function fetchScripts() {
             mainIndicator.classList.add('main-indicator-text');
             nameSpanContainer.appendChild(mainIndicator);
         }
+        
+        // Track clicks for differentiating between single and double clicks
+        let clickCount = 0;
+        let clickTimer = null;
+        
+        // Add click handler for both single and double clicks
+        listItem.addEventListener('click', (event) => {
+            // Ignore clicks on buttons or inside the actions container
+            if (event.target.closest('.actions')) {
+                return;
+            }
+            
+            clickCount++;
+            
+            if (clickCount === 1) {
+                clickTimer = setTimeout(() => {
+                    if (clickCount === 1) {
+                        // Single click - view the script
+                        openViewModal(scriptName);
+                    }
+                    clickCount = 0;
+                }, 300);
+            } else if (clickCount === 2) {
+                clearTimeout(clickTimer);
+                // Double click - set as main (if not already main)
+                if (scriptName !== currentMainScriptName) {
+                    setAsMainScript(scriptName);
+                }
+                clickCount = 0;
+            }
+        });
 
         const actionsContainer = document.createElement('div');
         actionsContainer.classList.add('actions');
@@ -205,8 +236,10 @@ async function uploadScript() {
     }
 
     // Visual feedback during upload
+    const originalText = uploadButton.textContent;
     uploadButton.textContent = 'Uploading...';
     uploadButton.disabled = true;
+    uploadButton.style.opacity = '0.7';
     
     try {
         const response = await fetch('/upload', {
@@ -241,8 +274,9 @@ async function uploadScript() {
         showToast('Network error. Please try again.', 'error');
     } finally {
         // Reset button state
-        uploadButton.textContent = 'Upload Script';
+        uploadButton.textContent = originalText;
         uploadButton.disabled = false;
+        uploadButton.style.opacity = '';
     }
 }
 
@@ -393,27 +427,40 @@ function downloadScript() {
 }
 
 async function setAsMainScript(scriptName) {
+    // If it's already the main script, just show a message
+    if (scriptName === currentMainScriptName) {
+        showToast(`"${scriptName}" is already the main script.`, 'success');
+        return;
+    }
+    
     const password = getPassword();
     if (!password) return; // getPassword will redirect if no password
     
-    const response = await fetch('/main', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password, fileName: scriptName }),
-    });
+    // Show a loading toast
+    const loadingToast = showToast(`Setting "${scriptName}" as main script...`, 'success');
     
-    const responseText = await response.text();
-    
-    if (response.ok) {
-        showToast(`Script "${scriptName}" set as main script.`, 'success');
-        currentMainScriptName = scriptName;
-        fetchScripts(); // Refresh the list to update the UI
-    } else if (response.status === 401) {
-        // If unauthorized, redirect to login page
-        window.location.href = '/login.html?error=auth';
-    } else {
-        showToast(responseText, 'error');
+    try {
+        const response = await fetch('/main', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password, fileName: scriptName }),
+        });
+        
+        const responseText = await response.text();
+        
+        if (response.ok) {
+            showToast(`Script "${scriptName}" set as main script.`, 'success');
+            currentMainScriptName = scriptName;
+            fetchScripts(); // Refresh the list to update the UI
+        } else if (response.status === 401) {
+            // If unauthorized, redirect to login page
+            window.location.href = '/login.html?error=auth';
+        } else {
+            showToast(responseText, 'error');
+        }
+    } catch (error) {
+        showToast(`Error setting "${scriptName}" as main script.`, 'error');
     }
 } 

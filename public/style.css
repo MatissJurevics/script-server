@@ -38,32 +38,50 @@ h2 {
     background-color: #252535;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     width: 45%;
     border: 1px solid #3a3a50;
-    transition: box-shadow 0.3s ease, transform 0.2s ease;
+    transition: box-shadow 0.2s ease;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .form-container {
-    background-image: linear-gradient(to bottom, #252535, #23232f);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
-    border-top: 3px solid #5c6bc0;
+    background-color: #252535;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border-top: 1px solid #3a3a50;
 }
 
 .form-container:hover, .list-container:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+.form-container h2, .list-container h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #3a3a50;
+    text-align: center;
+}
+
+.form-content {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
 }
 
 input[type="text"], input[type="password"], textarea {
-    width: calc(100% - 22px);
+    width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #4a4a64;
-    border-radius: 5px;
+    border-radius: 4px;
     background-color: #1e1e2c;
     color: #e0e0f0;
     font-family: 'Courier New', monospace;
+    box-sizing: border-box;
 }
 
 input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
@@ -109,7 +127,11 @@ button:hover {
 
 #scriptList {
     list-style-type: none;
+    overflow-y: auto;
     padding: 0;
+    margin: 0;
+    flex: 1;
+    max-height: calc(100% - 50px); /* Account for the header */
 }
 
 #scriptList li {
@@ -118,16 +140,62 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
 }
 
 #scriptList li:hover {
     background-color: #2e2e3e;
+    transform: translateX(3px);
+    box-shadow: -3px 0 0 #5c6bc0;
+}
+
+#scriptList li.main-script-indicator:hover {
+    transform: translateX(3px);
+    box-shadow: -3px 0 0 #cc6699;
+}
+
+/* Keep buttons and actions from moving */
+#scriptList li:hover .actions {
+    transform: translateX(-3px);
+}
+
+/* Show tooltip on hover to indicate click functionality */
+#scriptList li:hover::after {
+    content: "Click to view • Double-click to set as main";
+    position: absolute;
+    bottom: -25px;
+    left: 10px;
+    background-color: #383850;
+    color: #e0e0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 10;
+    animation: fade-in 0.3s ease forwards 0.5s;
+}
+
+#scriptList li.main-script-indicator:hover::after {
+    content: "Click to view • This is the main script";
 }
 
 #scriptList li .script-name {
     flex-grow: 1;
     margin-right: 10px;
+}
+
+#scriptList li .script-name:hover {
+    color: #a389f4;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 #scriptList li .actions {
@@ -383,4 +451,95 @@ button:hover {
         width: 100%;
         text-align: center;
     }
+}
+
+.script-textarea {
+    min-height: 180px;
+    max-height: 280px;
+    font-family: 'Courier New', monospace;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* Style both the script content and the script list to have the same appearance */
+.form-content, #scriptList {
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a50 #1e1e2c;
+}
+
+.form-content::-webkit-scrollbar, 
+#scriptList::-webkit-scrollbar {
+    width: 8px;
+}
+
+.form-content::-webkit-scrollbar-track, 
+#scriptList::-webkit-scrollbar-track {
+    background: #1e1e2c;
+    border-radius: 4px;
+}
+
+.form-content::-webkit-scrollbar-thumb, 
+#scriptList::-webkit-scrollbar-thumb {
+    background: #3a3a50;
+    border-radius: 4px;
+}
+
+.form-content::-webkit-scrollbar-thumb:hover, 
+#scriptList::-webkit-scrollbar-thumb:hover {
+    background: #4a4a64;
+}
+
+/* Adjust the upload button container to be more consistent with the script list */
+.upload-btn-container {
+    border-top: 1px solid #3a3a50;
+    padding-top: 15px;
+    margin-top: 15px;
+    text-align: right;
+}
+
+/* Make sure the button styling is consistent */
+.upload-btn {
+    display: inline-block;
+    width: auto;
+    padding: 6px 12px;
+    margin-top: 0;
+    background: #2e2e3e;
+    color: #e0e0f0;
+    border: 1px solid #3a3a50;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    opacity: 0.85;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid #5c6bc0;
+}
+
+.upload-btn:hover {
+    opacity: 1;
+    background: #383850;
+    box-shadow: 0 0 3px rgba(163, 137, 244, 0.3);
+    color: #5c6bc0;
+}
+
+/* Empty state styling for lists */
+#scriptList:empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+}
+
+#scriptList:empty:before {
+    content: "No scripts available";
+    color: #4a4a64;
+    font-style: italic;
+}
+
+/* Fix uneven appearance when list is short */
+.list-container {
+    padding-bottom: 15px;
+}
+
+.list-container ul {
+    padding-right: 5px; /* Consistent with form-content */
 } 

@@ -124,30 +124,7 @@
             box-shadow: 0 0 3px rgba(92, 107, 192, 0.2);
         }
         
-        .upload-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-top: 20px;
-            background: #383850;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        
-        .upload-btn:hover {
-            background: #42426a;
-        }
-        
-        .script-textarea {
-            min-height: 180px;
-            font-family: 'Courier New', monospace;
-            line-height: 1.5;
-            resize: vertical;
-        }
+        /* Upload button styles moved to CSS file */
         
         /* Toast Notification System */
         #toast-container {
@@ -217,17 +194,21 @@
         <div class="form-container">
             <h2>Upload Script</h2>
             
-            <div class="input-group">
-                <label for="scriptName">Script Name</label>
-                <input type="text" id="scriptName" placeholder="Enter a descriptive name for your script" required>
+            <div class="form-content">
+                <div class="input-group">
+                    <label for="scriptName">Script Name</label>
+                    <input type="text" id="scriptName" placeholder="Enter a descriptive name for your script" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="scriptContent">Script Content</label>
+                    <textarea id="scriptContent" class="script-textarea" placeholder="// Enter your script code here..." rows="10" required></textarea>
+                </div>
             </div>
             
-            <div class="input-group">
-                <label for="scriptContent">Script Content</label>
-                <textarea id="scriptContent" class="script-textarea" placeholder="// Enter your script code here..." rows="10" required></textarea>
+            <div class="upload-btn-container">
+                <button class="upload-btn" onclick="uploadScript()">Upload Script</button>
             </div>
-            
-            <button class="upload-btn" onclick="uploadScript()">Upload Script</button>
         </div>
         
         <div class="list-container">
