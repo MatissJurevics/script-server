@@ -217,6 +217,68 @@ app.delete("/tags/:scriptName/:tag", (req, res) => {
     res.status(200).send('Tag deleted successfully');
 });
 
+app.get("/settings", (req, res) => {
+    if (req.cookies.scriptManagerPassword !== PASSWORD) {
+        return res.status(401).send('Unauthorized');
+    }
+    const settingsPath = path.join(__dirname, 'settings.json');
+    let settings;
+    
+    try {
+        if (fs.existsSync(settingsPath)) {
+            settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        } else {
+            settings = {
+                "scriptsPerPage": 10,
+                "OpenAIAPIKey": "",
+            };
+            // Create the settings file if it doesn't exist
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+        }
+    } catch (error) {
+        console.error("Error reading settings file:", error);
+        settings = {
+            "scriptsPerPage": 10,
+            "OpenAIAPIKey": "",
+        };
+        // Create a new settings file if there was an error
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    }
+    
+    res.json(settings);
+});
+
+app.post("/settings", (req, res) => {
+    if (req.cookies.scriptManagerPassword !== PASSWORD) {
+        return res.status(401).send('Unauthorized');
+    }
+    const settingsPath = path.join(__dirname, 'settings.json');
+    let settings;
+    
+    try {
+        if (fs.existsSync(settingsPath)) {
+            settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        } else {
+            settings = {
+                "scriptsPerPage": 10,
+                "OpenAIAPIKey": "",
+            };
+        }
+    } catch (error) {
+        console.error("Error reading settings file:", error);
+        settings = {
+            "scriptsPerPage": 10,
+            "OpenAIAPIKey": "",
+        };
+    }
+    
+    // Update settings with the new values
+    settings = { ...settings, ...req.body };
+    
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    res.status(200).send('Settings updated successfully');
+});
+
 app.get("/scriptData", (req, res) => {
     const scriptStorePath = path.join(__dirname, 'scriptstore.json');
     const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));

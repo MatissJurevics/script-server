@@ -5,6 +5,7 @@ let toastTimeout = null;
 let scriptDataCache = null;
 let lastScriptDataFetch = 0;
 const CACHE_TIMEOUT = 30000; // 30 seconds cache
+let currentSettings = null;
 
 // Store the current editing script's tags
 let currentEditingTags = [];
@@ -52,6 +53,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 uploadScript();
             }
         });
+    }
+    
+    // Add event listener to settings button
+    const settingsBtn = document.querySelector('.settings-btn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+            fetchSettings().then(() => {
+                openSettingsModal();
+            });
+        });
+    }
+    
+    // Add event listener for saving settings
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', saveSettings);
     }
 });
 
@@ -1242,5 +1259,129 @@ async function confirmScriptDeletion() {
         window.location.href = '/login.html?error=auth';
     } else {
         showToast(responseText, 'error');
+    }
+}
+
+// Settings Functions
+async function fetchSettings() {
+    try {
+        const password = getPassword();
+        if (!password) return;
+
+        const response = await fetch('/settings', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const settings = await response.json();
+            currentSettings = settings;
+            updateSettingsUI(settings);
+            return settings;
+        } else {
+            showToast('Failed to fetch settings', 'error');
+        }
+    } catch (error) {
+        console.error('Error fetching settings:', error);
+        showToast('Error fetching settings', 'error');
+    }
+}
+
+function updateSettingsUI(settings) {
+    // Update the settings form with values from the server
+    if (settings.scriptsPerPage) {
+        const scriptListLimitSelect = document.getElementById('scriptListLimit');
+        scriptListLimitSelect.value = settings.scriptsPerPage;
+        scriptListLimitSelect.disabled = false;
+    }
+    
+    // Update OpenAI API Key field if it exists
+    const apiKeyInput = document.getElementById('openAIAPIKey');
+    if (apiKeyInput && settings.OpenAIAPIKey !== undefined) {
+        apiKeyInput.value = settings.OpenAIAPIKey;
+    }
+    
+    // Enable the save button
+    const saveBtn = document.querySelector('#settingsModal .save-btn');
+    if (saveBtn) {
+        saveBtn.disabled = false;
+    }
+}
+
+async function saveSettings() {
+    try {
+        const password = getPassword();
+        if (!password) return;
+        
+        // Get values from the settings form
+        const scriptListLimit = document.getElementById('scriptListLimit').value;
+        const apiKeyInput = document.getElementById('openAIAPIKey');
+        const openAIAPIKey = apiKeyInput ? apiKeyInput.value : '';
+        
+        // Create settings object
+        const updatedSettings = {
+            scriptsPerPage: parseInt(scriptListLimit),
+            OpenAIAPIKey: openAIAPIKey
+        };
+        
+        const response = await fetch('/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedSettings)
+        });
+        
+        if (response.ok) {
+            showToast('Settings saved successfully', 'success');
+            currentSettings = updatedSettings;
+            closeSettingsModal();
+        } else {
+            showToast('Failed to save settings', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showToast('Error saving settings', 'error');
+    }
+}
+
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    modal.style.display = 'block';
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Add ESC key listener for modal
+    document.addEventListener('keydown', handleSettingsModalKeydown);
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    modal.classList.remove('show');
+    
+    // Wait for animation to finish before hiding
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+    
+    // Remove ESC key listener
+    document.removeEventListener('keydown', handleSettingsModalKeydown);
+}
+
+function handleSettingsModalKeydown(event) {
+    // Close on ESC key
+    if (event.key === 'Escape') {
+        closeSettingsModal();
+    }
+    
+    // Save on Ctrl+S
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        saveSettings();
     }
 } 

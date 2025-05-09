@@ -328,6 +328,24 @@
                 padding: 1rem;
             }
         }
+        
+        .full-width-input {
+            width: 100%;
+            padding: 0.625rem;
+            background-color: #1e1e2c;
+            border: 1px solid #3a3a50;
+            border-radius: 0.25rem;
+            color: #e0e0f0;
+            font-family: 'Courier New', monospace;
+            margin-top: 0.3125rem;
+            box-sizing: border-box;
+        }
+        
+        .full-width-input:focus {
+            border-color: #5c6bc0;
+            outline: none;
+            box-shadow: 0 0 0.1875rem rgba(92, 107, 192, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -514,48 +532,32 @@
             <div class="settings-section">
                 <h3>Display Options</h3>
                 <div class="setting-item">
-                    <label for="darkModeToggle">Dark Mode</label>
-                    <input type="checkbox" id="darkModeToggle" checked disabled>
-                    <span class="setting-description">Enable dark theme (always on)</span>
-                </div>
-                
-                <div class="setting-item">
                     <label for="scriptListLimit">Scripts Per Page</label>
-                    <select id="scriptListLimit" disabled>
+                    <select id="scriptListLimit">
                         <option value="10">10</option>
-                        <option value="25" selected>25</option>
+                        <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span class="setting-description">Coming in future update</span>
+                    <span class="setting-description">Number of scripts to display per page</span>
                 </div>
             </div>
             
             <div class="settings-section">
-                <h3>Security Options</h3>
+                <h3>API Settings</h3>
                 <div class="setting-item">
-                    <label for="sessionTimeout">Session Timeout</label>
-                    <select id="sessionTimeout" disabled>
-                        <option value="30">30 minutes</option>
-                        <option value="60" selected>1 hour</option>
-                        <option value="120">2 hours</option>
-                        <option value="240">4 hours</option>
-                    </select>
-                    <span class="setting-description">Coming in future update</span>
-                </div>
-                
-                <div class="setting-item">
-                    <button class="change-password-btn" disabled>Change Password</button>
-                    <span class="setting-description">Coming in future update</span>
+                    <label for="openAIAPIKey">OpenAI API Key</label>
+                    <input type="password" id="openAIAPIKey" placeholder="sk-..." class="full-width-input">
+                    <span class="setting-description">Your OpenAI API key for AI features</span>
                 </div>
             </div>
         </div>
         
         <div class="modal-footer">
             <button class="cancel-btn" onclick="closeSettingsModal()">Close</button>
-            <button class="save-btn" disabled>Save Changes</button>
+            <button class="save-btn" id="saveSettingsBtn">Save Changes</button>
         </div>
         
-        <div class="keyboard-hint">Settings functionality coming soon • ESC to close</div>
+        <div class="keyboard-hint">Press Ctrl+S to save • ESC to close</div>
     </div>
 </div> 
