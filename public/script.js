@@ -6,6 +6,10 @@ let scriptDataCache = null;
 let lastScriptDataFetch = 0;
 const CACHE_TIMEOUT = 30000; // 30 seconds cache
 let currentSettings = null;
+let currentAiResponse = '';
+let aiContextMenuVisible = false;
+let aiCompactMode = true;
+let selectedTextForAi = '';
 
 // Store the current editing script's tags
 let currentEditingTags = [];
@@ -70,6 +74,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener('click', saveSettings);
     }
+    
+    // Initialize the AI context menu
+    setupAiContextMenu();
+    
+    // Fetch settings on page load
+    fetchSettings();
 });
 
 // Toast Notification System
@@ -1303,6 +1313,12 @@ function updateSettingsUI(settings) {
         apiKeyInput.value = settings.OpenAIAPIKey;
     }
     
+    // Update AI context menu toggle if it exists
+    const aiContextMenuToggle = document.getElementById('aiContextMenuToggle');
+    if (aiContextMenuToggle && settings.aiContextMenuEnabled !== undefined) {
+        aiContextMenuToggle.checked = settings.aiContextMenuEnabled;
+    }
+    
     // Enable the save button
     const saveBtn = document.querySelector('#settingsModal .save-btn');
     if (saveBtn) {
@@ -1320,10 +1336,15 @@ async function saveSettings() {
         const apiKeyInput = document.getElementById('openAIAPIKey');
         const openAIAPIKey = apiKeyInput ? apiKeyInput.value : '';
         
+        // Get AI context menu toggle value
+        const aiContextMenuToggle = document.getElementById('aiContextMenuToggle');
+        const aiContextMenuEnabled = aiContextMenuToggle ? aiContextMenuToggle.checked : true;
+        
         // Create settings object
         const updatedSettings = {
             scriptsPerPage: parseInt(scriptListLimit),
-            OpenAIAPIKey: openAIAPIKey
+            OpenAIAPIKey: openAIAPIKey,
+            aiContextMenuEnabled: aiContextMenuEnabled
         };
         
         const response = await fetch('/settings', {
@@ -1384,4 +1405,532 @@ function handleSettingsModalKeydown(event) {
         event.preventDefault();
         saveSettings();
     }
+}
+
+// AI Context Menu Functions
+function setupAiContextMenu() {
+    console.log("Setting up AI context menu");
+    
+    const scriptContentTextarea = document.getElementById('scriptContent');
+    const editModalScriptContent = document.getElementById('editModalScriptContent');
+    const aiContextMenu = document.getElementById('aiContextMenu');
+    const aiCompactButton = document.getElementById('aiCompactButton');
+    const aiExpandedMenu = document.getElementById('aiExpandedMenu');
+    const aiMinimizeBtn = document.getElementById('aiMinimizeBtn');
+    const aiPromptInput = document.getElementById('aiPromptInput');
+    const aiSubmitBtn = document.getElementById('aiSubmitBtn');
+    const aiInsertBtn = document.getElementById('aiInsertBtn');
+    const aiCopyBtn = document.getElementById('aiCopyBtn');
+    const aiCloseBtn = document.getElementById('aiCloseBtn');
+    
+    if (!scriptContentTextarea) {
+        console.error("Script content textarea not found");
+        return;
+    }
+    
+    if (!aiContextMenu) {
+        console.error("AI context menu not found");
+        return;
+    }
+    
+    // Show context menu on right-click
+    scriptContentTextarea.addEventListener('contextmenu', function(e) {
+        console.log("Right-click detected on script textarea");
+        // Store selected text if any
+        selectedTextForAi = this.value.substring(this.selectionStart, this.selectionEnd);
+        showAiContextMenu(e, this);
+    });
+    
+    // Also add context menu to the edit modal textarea
+    if (editModalScriptContent) {
+        editModalScriptContent.addEventListener('contextmenu', function(e) {
+            console.log("Right-click detected on edit modal textarea");
+            // Store selected text if any
+            selectedTextForAi = this.value.substring(this.selectionStart, this.selectionEnd);
+            showAiContextMenu(e, this);
+        });
+    } else {
+        console.warn("Edit modal textarea not found yet - will attach listener when modal opens");
+    }
+    
+    // Handle compact button click to expand
+    if (aiCompactButton) {
+        aiCompactButton.addEventListener('click', function(e) {
+            console.log("AI compact button clicked");
+            expandAiMenu();
+        });
+    } else {
+        console.error("AI compact button not found");
+    }
+    
+    // Handle minimize button click
+    if (aiMinimizeBtn) {
+        aiMinimizeBtn.addEventListener('click', function(e) {
+            console.log("AI minimize button clicked");
+            e.stopPropagation();
+            minimizeAiMenu();
+        });
+    }
+    
+    // Handle click on submit button
+    if (aiSubmitBtn) {
+        aiSubmitBtn.addEventListener('click', function() {
+            submitAiPrompt();
+        });
+    }
+    
+    // Handle Enter key in prompt input
+    if (aiPromptInput) {
+        aiPromptInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                submitAiPrompt();
+            }
+        });
+    }
+    
+    // Handle insert button
+    if (aiInsertBtn) {
+        aiInsertBtn.addEventListener('click', function() {
+            insertAiResponse();
+        });
+    }
+    
+    // Handle copy button
+    if (aiCopyBtn) {
+        aiCopyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(currentAiResponse)
+                .then(() => {
+                    showToast('AI response copied to clipboard', 'success');
+                })
+                .catch(err => {
+                    console.error('Error copying to clipboard:', err);
+                    showToast('Failed to copy response', 'error');
+                });
+        });
+    }
+    
+    // Handle close button
+    if (aiCloseBtn) {
+        aiCloseBtn.addEventListener('click', function() {
+            closeAiContextMenu();
+        });
+    }
+    
+    // Close the menu when clicking outside of it
+    document.addEventListener('click', function(e) {
+        if (aiContextMenuVisible && !aiContextMenu.contains(e.target)) {
+            closeAiContextMenu();
+        }
+    });
+    
+    console.log("AI context menu setup complete");
+}
+
+function showAiContextMenu(e, textarea) {
+    console.log("Showing AI context menu", e.pageX, e.pageY);
+    
+    // Check if AI context menu is enabled in settings
+    if (currentSettings && currentSettings.aiContextMenuEnabled === false) {
+        console.log("AI context menu is disabled in settings");
+        return;
+    }
+    
+    e.preventDefault(); // Prevent the default context menu
+    
+    const aiContextMenu = document.getElementById('aiContextMenu');
+    if (!aiContextMenu) {
+        console.error("AI context menu element not found");
+        return;
+    }
+    
+    // Position the menu near where user clicked
+    const rect = textarea.getBoundingClientRect();
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+    
+    let top = e.pageY;
+    let left = e.pageX;
+    
+    // Store the target textarea for later use when inserting text
+    aiContextMenu.dataset.targetTextarea = textarea.id;
+    
+    // Reset to compact mode when showing
+    resetToCompactMode();
+    
+    // Check if menu would go off screen and adjust positioning
+    const menuWidth = 30; // Width of compact button (updated)
+    const menuHeight = 24; // Height of compact button (updated)
+    
+    if (left + menuWidth > window.innerWidth + scrollLeft) {
+        left = window.innerWidth + scrollLeft - menuWidth - 10;
+    }
+    
+    if (top + menuHeight > window.innerHeight + scrollTop) {
+        top = window.innerHeight + scrollTop - menuHeight - 10;
+    }
+    
+    // Position the menu
+    aiContextMenu.style.top = `${top}px`;
+    aiContextMenu.style.left = `${left}px`;
+    
+    // Show the menu
+    aiContextMenu.classList.add('active');
+    aiContextMenuVisible = true;
+    
+    console.log("AI context menu displayed at", top, left);
+}
+
+function expandAiMenu() {
+    const aiCompactButton = document.getElementById('aiCompactButton');
+    const aiExpandedMenu = document.getElementById('aiExpandedMenu');
+    const aiContextMenu = document.getElementById('aiContextMenu');
+    
+    // Hide the compact button
+    aiCompactButton.style.display = 'none';
+    
+    // Show expanded menu
+    aiExpandedMenu.style.display = 'block';
+    
+    // Reposition if needed
+    const menuWidth = 450; // Updated to match the new width
+    const menuHeight = 450; // Approximate expanded height
+    const rect = aiContextMenu.getBoundingClientRect();
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+    
+    let top = parseInt(aiContextMenu.style.top);
+    let left = parseInt(aiContextMenu.style.left);
+    
+    if (left + menuWidth > window.innerWidth + scrollLeft) {
+        left = window.innerWidth + scrollLeft - menuWidth - 10;
+        aiContextMenu.style.left = `${left}px`;
+    }
+    
+    if (top + menuHeight > window.innerHeight + scrollTop) {
+        top = window.innerHeight + scrollTop - menuHeight - 10;
+        aiContextMenu.style.top = `${top}px`;
+    }
+    
+    // Clear any previous responses
+    document.getElementById('aiResponseContent').textContent = '';
+    document.getElementById('aiResponseContent').classList.remove('active');
+    document.getElementById('aiResponseLoading').classList.remove('active');
+    document.querySelector('.ai-response-placeholder').style.display = 'block';
+    
+    // Set placeholder text based on whether text is selected
+    const aiPromptInput = document.getElementById('aiPromptInput');
+    aiPromptInput.value = '';
+    if (selectedTextForAi) {
+        aiPromptInput.placeholder = 'Ask AI about the selected text...';
+    } else {
+        aiPromptInput.placeholder = 'Ask AI to help with your script...';
+    }
+    
+    // Focus on the prompt input
+    setTimeout(() => {
+        aiPromptInput.focus();
+    }, 100);
+    
+    aiCompactMode = false;
+}
+
+function minimizeAiMenu() {
+    resetToCompactMode();
+}
+
+function resetToCompactMode() {
+    const aiCompactButton = document.getElementById('aiCompactButton');
+    const aiExpandedMenu = document.getElementById('aiExpandedMenu');
+    
+    // Show the compact button
+    aiCompactButton.style.display = 'flex';
+    
+    // Hide expanded menu
+    aiExpandedMenu.style.display = 'none';
+    
+    aiCompactMode = true;
+}
+
+function closeAiContextMenu() {
+    const aiContextMenu = document.getElementById('aiContextMenu');
+    aiContextMenu.classList.remove('active');
+    aiContextMenuVisible = false;
+    currentAiResponse = '';
+    selectedTextForAi = '';
+}
+
+// Function to clean markdown code blocks from text
+function stripMarkdownCodeBlocks(text) {
+    // Check if the text contains markdown code block markers
+    if (text.includes('```') || text.includes('~~~')) {
+        console.log('Detected markdown code blocks, cleaning...');
+        
+        // Strip out any starting code block markers including language specs
+        // For example: ```javascript, ```python, ```sh, etc.
+        let cleaned = text.replace(/^```(\w+)?\s*\n/gm, '');
+        cleaned = cleaned.replace(/^~~~(\w+)?\s*\n/gm, '');
+        
+        // Remove ending code block markers
+        cleaned = cleaned.replace(/```\s*$/gm, '');
+        cleaned = cleaned.replace(/~~~\s*$/gm, '');
+        
+        // Handle case where the entire response is wrapped in a single code block
+        if (cleaned.startsWith('```') || cleaned.startsWith('~~~')) {
+            cleaned = cleaned.replace(/^```(\w+)?\s*/, '');
+            cleaned = cleaned.replace(/^~~~(\w+)?\s*/, '');
+            
+            const endIndex = cleaned.lastIndexOf('```');
+            if (endIndex !== -1) {
+                cleaned = cleaned.substring(0, endIndex);
+            }
+            
+            const tildaEndIndex = cleaned.lastIndexOf('~~~');
+            if (tildaEndIndex !== -1) {
+                cleaned = cleaned.substring(0, tildaEndIndex);
+            }
+        }
+        
+        return cleaned.trim();
+    }
+    
+    return text;
+}
+
+async function submitAiPrompt() {
+    const aiPromptInput = document.getElementById('aiPromptInput');
+    const prompt = aiPromptInput.value.trim();
+    
+    if (!prompt) {
+        showToast('Please enter a prompt', 'error');
+        return;
+    }
+    
+    // Check if OpenAI API key is set
+    if (!currentSettings || !currentSettings.OpenAIAPIKey) {
+        showToast('OpenAI API key not set. Please add it in Settings.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const responseContent = document.getElementById('aiResponseContent');
+    const loadingIndicator = document.getElementById('aiResponseLoading');
+    const placeholder = document.querySelector('.ai-response-placeholder');
+    
+    responseContent.textContent = '';
+    responseContent.classList.remove('active');
+    loadingIndicator.classList.add('active');
+    placeholder.style.display = 'none';
+    
+    try {
+        // Use the stored selected text
+        const enhancedPrompt = selectedTextForAi 
+            ? `${prompt}\n\nHere's the code I'm working with:\n\`\`\`\n${selectedTextForAi}\n\`\`\``
+            : prompt;
+        
+        // Send request to backend
+        const response = await fetch('/aigen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt: enhancedPrompt })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to get AI response');
+        }
+        
+        // Process the SSE response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        
+        responseContent.textContent = '';
+        responseContent.classList.add('active');
+        currentAiResponse = '';
+        let fullResponse = '';
+        
+        // Hide loading indicator
+        loadingIndicator.classList.remove('active');
+        
+        // Read the stream
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data:')) {
+                    const data = line.substring(5).trim();
+                    if (data === '[DONE]') {
+                        // Final cleanup of the full response once streaming is complete
+                        currentAiResponse = stripMarkdownCodeBlocks(fullResponse);
+                        responseContent.textContent = currentAiResponse;
+                        break;
+                    }
+                    
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData.content) {
+                            fullResponse += parsedData.content;
+                            
+                            // Live update with incremental cleaning
+                            // This is a simplified clean for the streaming updates
+                            currentAiResponse = fullResponse.replace(/```\w*|```/g, '').replace(/~~~\w*|~~~/g, '');
+                            responseContent.textContent = currentAiResponse;
+                            
+                            // Auto scroll to bottom
+                            responseContent.parentElement.scrollTop = responseContent.parentElement.scrollHeight;
+                        }
+                    } catch (error) {
+                        console.error('Error parsing SSE data:', error);
+                    }
+                }
+            }
+        }
+        
+        // Final cleanup after stream is complete (in case we missed anything)
+        currentAiResponse = stripMarkdownCodeBlocks(fullResponse);
+        responseContent.textContent = currentAiResponse;
+        
+    } catch (error) {
+        console.error('Error getting AI response:', error);
+        showToast('Error getting AI response: ' + error.message, 'error');
+        
+        // Hide loading state
+        loadingIndicator.classList.remove('active');
+        
+        // Show error message in response area
+        responseContent.textContent = 'Error: ' + error.message;
+        responseContent.classList.add('active');
+        placeholder.style.display = 'none';
+    }
+}
+
+function insertAiResponse() {
+    if (!currentAiResponse) {
+        showToast('No AI response to insert', 'error');
+        return;
+    }
+    
+    // Get the target textarea
+    const targetTextareaId = document.getElementById('aiContextMenu').dataset.targetTextarea;
+    const targetTextarea = document.getElementById(targetTextareaId);
+    
+    if (!targetTextarea) {
+        showToast('Target textarea not found', 'error');
+        return;
+    }
+    
+    // Insert the response at cursor position or replace selected text
+    const startPos = targetTextarea.selectionStart;
+    const endPos = targetTextarea.selectionEnd;
+    const textBefore = targetTextarea.value.substring(0, startPos);
+    const textAfter = targetTextarea.value.substring(endPos);
+    
+    targetTextarea.value = textBefore + currentAiResponse + textAfter;
+    
+    // Update cursor position after insertion
+    const newCursorPos = startPos + currentAiResponse.length;
+    targetTextarea.setSelectionRange(newCursorPos, newCursorPos);
+    
+    // Focus back on the textarea
+    targetTextarea.focus();
+    
+    // Close the context menu
+    closeAiContextMenu();
+    
+    // Show success message
+    showToast('AI response inserted', 'success');
+}
+
+// Add a direct right-click event listener after the page loads
+window.addEventListener('load', function() {
+    console.log("Window load event - adding direct right-click listener");
+    const scriptContentTextarea = document.getElementById('scriptContent');
+    
+    if (scriptContentTextarea) {
+        console.log("Found script textarea, attaching contextmenu event listener directly");
+        scriptContentTextarea.oncontextmenu = function(e) {
+            console.log("Direct right-click event triggered");
+            
+            // Check if AI context menu is enabled in settings
+            if (currentSettings && currentSettings.aiContextMenuEnabled === false) {
+                console.log("AI context menu is disabled in settings");
+                return true; // Allow default context menu
+            }
+            
+            e.preventDefault();
+            
+            // Store selected text if any
+            selectedTextForAi = this.value.substring(this.selectionStart, this.selectionEnd);
+            
+            // Show the AI context menu
+            const aiContextMenu = document.getElementById('aiContextMenu');
+            if (aiContextMenu) {
+                // Adjust position to account for the smaller button size
+                const menuWidth = 30; // Smaller width
+                const menuHeight = 24; // Smaller height
+                let top = e.pageY;
+                let left = e.pageX;
+                
+                // Adjust if it would go off screen
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+                
+                if (left + menuWidth > window.innerWidth + scrollLeft) {
+                    left = window.innerWidth + scrollLeft - menuWidth - 10;
+                }
+                
+                if (top + menuHeight > window.innerHeight + scrollTop) {
+                    top = window.innerHeight + scrollTop - menuHeight - 10;
+                }
+                
+                // Position the menu at the cursor
+                aiContextMenu.style.top = `${top}px`;
+                aiContextMenu.style.left = `${left}px`;
+                
+                // Store the target textarea ID
+                aiContextMenu.dataset.targetTextarea = this.id;
+                
+                // Reset to compact mode
+                const aiCompactButton = document.getElementById('aiCompactButton');
+                const aiExpandedMenu = document.getElementById('aiExpandedMenu');
+                
+                if (aiCompactButton && aiExpandedMenu) {
+                    aiCompactButton.style.display = 'flex';
+                    aiExpandedMenu.style.display = 'none';
+                }
+                
+                // Show the context menu
+                aiContextMenu.classList.add('active');
+                aiContextMenuVisible = true;
+                
+                console.log("AI context menu activated directly");
+            } else {
+                console.error("AI context menu element not found during direct event");
+            }
+            
+            return false;
+        };
+    } else {
+        console.error("Script textarea not found in load event");
+    }
+});
+
+// Helper function for view modal right-click
+function handleViewTextareaRightClick(e) {
+    console.log("Right-click handled in view modal textarea");
+    
+    // Check if AI context menu is enabled in settings
+    if (currentSettings && currentSettings.aiContextMenuEnabled === false) {
+        console.log("AI context menu is disabled in settings");
+        return true; // Allow default context menu
+    }
+    
+    e.preventDefault();
+    // Store selected text if any
+    selectedTextForAi = this.value.substring(this.selectionStart, this.selectionEnd);
+    showAiContextMenu(e, this);
 } 

@@ -346,6 +346,204 @@
             outline: none;
             box-shadow: 0 0 0.1875rem rgba(92, 107, 192, 0.3);
         }
+        
+        /* AI Context Menu Styles */
+        .ai-context-menu {
+            position: absolute;
+            background-color: #2a2a3a;
+            border: 1px solid #4a4a64;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            opacity: 0;
+            transform: scale(0.95);
+            transform-origin: top left;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .ai-context-menu.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+        
+        /* Compact button styles */
+        .ai-context-menu-compact {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            background-color: #5c6bc0;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+            box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            min-width: 30px;
+            min-height: 24px;
+        }
+        
+        .ai-context-menu-compact:hover {
+            background-color: #4a59a9;
+        }
+        
+        .ai-context-menu-expanded {
+            width: 450px;
+            max-width: calc(100vw - 40px);
+        }
+        
+        .ai-context-menu-header {
+            padding: 0.75rem 1rem;
+            background-color: #333345;
+            color: #a389f4;
+            font-weight: bold;
+            border-bottom: 1px solid #4a4a64;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ai-minimize-btn {
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0 0.375rem;
+            border-radius: 0.25rem;
+        }
+        
+        .ai-minimize-btn:hover {
+            background-color: #3d3d52;
+        }
+        
+        .ai-context-menu-content {
+            padding: 1rem;
+        }
+        
+        .ai-input-container {
+            display: flex;
+            margin-bottom: 0.75rem;
+        }
+        
+        .ai-prompt-input {
+            flex-grow: 1;
+            padding: 0.625rem;
+            background-color: #1e1e2c;
+            border: 1px solid #3a3a50;
+            border-radius: 0.25rem 0 0 0.25rem;
+            color: #e0e0f0;
+            margin-bottom: 0 !important;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .ai-submit-btn {
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            border-radius: 0 0.25rem 0.25rem 0;
+            padding: 0 0.75rem;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .ai-submit-btn:hover {
+            background-color: #4a59a9;
+        }
+        
+        .ai-response-container {
+            min-height: 200px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 0.75rem;
+            background-color: #1e1e2c;
+            border-radius: 0.25rem;
+            margin-bottom: 0.75rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            position: relative;
+        }
+        
+        .ai-response-placeholder {
+            color: #6b6b8a;
+            font-style: italic;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .ai-response-content {
+            display: none;
+            white-space: pre-wrap;
+        }
+        
+        .ai-response-content.active {
+            display: block;
+        }
+        
+        .ai-response-loading {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .ai-response-loading.active {
+            display: block;
+        }
+        
+        .loading-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #5c6bc0;
+            margin: 0 4px;
+            animation: dot-pulse 1.5s infinite ease-in-out;
+        }
+        
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(0.7); opacity: 0.5; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+        
+        .ai-context-menu-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .ai-action-btn {
+            background-color: #333345;
+            color: #e0e0f0;
+            border: 1px solid #4a4a64;
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .ai-action-btn:hover {
+            background-color: #4a4a64;
+        }
+        
+        .ai-action-btn:first-child {
+            background-color: #5c6bc0;
+            border-color: #4a59a9;
+        }
+        
+        .ai-action-btn:first-child:hover {
+            background-color: #4a59a9;
+        }
     </style>
 </head>
 <body>
@@ -532,6 +730,12 @@
             <div class="settings-section">
                 <h3>Display Options</h3>
                 <div class="setting-item">
+                    <label for="darkModeToggle">Dark Mode</label>
+                    <input type="checkbox" id="darkModeToggle" checked disabled>
+                    <span class="setting-description">Enable dark theme (always on)</span>
+                </div>
+                
+                <div class="setting-item">
                     <label for="scriptListLimit">Scripts Per Page</label>
                     <select id="scriptListLimit">
                         <option value="10">10</option>
@@ -544,11 +748,39 @@
             </div>
             
             <div class="settings-section">
+                <h3>AI Features</h3>
+                <div class="setting-item">
+                    <label for="aiContextMenuToggle">AI Context Menu</label>
+                    <input type="checkbox" id="aiContextMenuToggle" checked>
+                    <span class="setting-description">Show AI assistant when right-clicking in text areas</span>
+                </div>
+            </div>
+            
+            <div class="settings-section">
                 <h3>API Settings</h3>
                 <div class="setting-item">
                     <label for="openAIAPIKey">OpenAI API Key</label>
                     <input type="password" id="openAIAPIKey" placeholder="sk-..." class="full-width-input">
                     <span class="setting-description">Your OpenAI API key for AI features</span>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Security Options</h3>
+                <div class="setting-item">
+                    <label for="sessionTimeout">Session Timeout</label>
+                    <select id="sessionTimeout" disabled>
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 hour</option>
+                        <option value="120">2 hours</option>
+                        <option value="240">4 hours</option>
+                    </select>
+                    <span class="setting-description">Coming in future update</span>
+                </div>
+                
+                <div class="setting-item">
+                    <button class="change-password-btn" disabled>Change Password</button>
+                    <span class="setting-description">Coming in future update</span>
                 </div>
             </div>
         </div>
@@ -560,4 +792,50 @@
         
         <div class="keyboard-hint">Press Ctrl+S to save • ESC to close</div>
     </div>
-</div> 
+</div>
+
+<!-- AI Context Menu -->
+<div id="aiContextMenu" class="context-menu ai-context-menu">
+    <div class="ai-context-menu-compact" id="aiCompactButton">
+        <span>AI</span>
+    </div>
+    <div class="ai-context-menu-expanded" id="aiExpandedMenu" style="display: none;">
+        <div class="ai-context-menu-header">
+            AI Assistant
+            <span class="ai-minimize-btn" id="aiMinimizeBtn">−</span>
+        </div>
+        <div class="ai-context-menu-content">
+            <div class="ai-input-container">
+                <input type="text" id="aiPromptInput" placeholder="Ask AI to help with your script..." class="ai-prompt-input">
+                <button id="aiSubmitBtn" class="ai-submit-btn">Ask</button>
+            </div>
+            <div id="aiResponseContainer" class="ai-response-container">
+                <div class="ai-response-placeholder">AI responses will appear here</div>
+                <div id="aiResponseContent" class="ai-response-content"></div>
+                <div id="aiResponseLoading" class="ai-response-loading">
+                    <span class="loading-dot"></span>
+                    <span class="loading-dot"></span>
+                    <span class="loading-dot"></span>
+                </div>
+            </div>
+            <div class="ai-context-menu-footer">
+                <button id="aiInsertBtn" class="ai-action-btn">Insert</button>
+                <button id="aiCopyBtn" class="ai-action-btn">Copy</button>
+                <button id="aiCloseBtn" class="ai-action-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize AI context menu position outside viewport
+    document.addEventListener('DOMContentLoaded', function() {
+        const aiContextMenu = document.getElementById('aiContextMenu');
+        if (aiContextMenu) {
+            // Position offscreen initially
+            aiContextMenu.style.top = '-9999px';
+            aiContextMenu.style.left = '-9999px';
+            console.log('AI context menu initialized');
+        }
+    });
+</script> 

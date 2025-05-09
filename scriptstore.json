@@ -55,6 +55,16 @@
       "tags": [
         "Linux"
       ]
+    },
+    {
+      "name": "CheckLeagueAndCloseVanguard",
+      "content": "$taskName = \"CheckLeagueAndCloseVanguard\"\n\n$action = New-ScheduledTaskAction -Execute \"PowerShell.exe\" -ArgumentList \"-ExecutionPolicy Bypass -File `\"$PWD\\lol_vanguard_killer.ps1`\"\"\n\n$trigger = New-ScheduledTaskTrigger -AtStartup\n\n$principal = New-ScheduledTaskPrincipal -LogonType ServiceAccount -RunLevel Highest\n\n$settings = New-ScheduledTaskSettingsSet -Hidden -RunOnlyIfIdle -IdleDuration (New-TimeSpan -Minutes 1) -IdleWaitTime (New-TimeSpan -Minutes 2)\n\nRegister-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force\n```\n\n```powershell\n# lol_vanguard_killer.ps1\nwhile ($true) {\n    if (Get-Process -Name \"LeagueClient\" -ErrorAction SilentlyContinue) {\n        Get-Process -Name \"RiotVanguard\" | Stop-Process -Force\n    }\n    Start-Sleep -Seconds 10\n}\n",
+      "createdAt": "2025-05-09T15:44:34.044Z",
+      "updatedAt": "2025-05-09T15:44:34.044Z",
+      "tags": [
+        "Windows",
+        "Malicious"
+      ]
     }
   ]
 }

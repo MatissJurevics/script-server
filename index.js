@@ -4,6 +4,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
+import OpenAI from 'openai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -231,6 +232,7 @@ app.get("/settings", (req, res) => {
             settings = {
                 "scriptsPerPage": 10,
                 "OpenAIAPIKey": "",
+                "aiContextMenuEnabled": true
             };
             // Create the settings file if it doesn't exist
             fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
@@ -240,6 +242,7 @@ app.get("/settings", (req, res) => {
         settings = {
             "scriptsPerPage": 10,
             "OpenAIAPIKey": "",
+            "aiContextMenuEnabled": true
         };
         // Create a new settings file if there was an error
         fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
@@ -262,6 +265,7 @@ app.post("/settings", (req, res) => {
             settings = {
                 "scriptsPerPage": 10,
                 "OpenAIAPIKey": "",
+                "aiContextMenuEnabled": true
             };
         }
     } catch (error) {
@@ -269,6 +273,7 @@ app.post("/settings", (req, res) => {
         settings = {
             "scriptsPerPage": 10,
             "OpenAIAPIKey": "",
+            "aiContextMenuEnabled": true
         };
     }
     
@@ -278,6 +283,45 @@ app.post("/settings", (req, res) => {
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
     res.status(200).send('Settings updated successfully');
 });
+
+app.post("/aigen", async (req, res) => {
+    if (req.cookies.scriptManagerPassword !== PASSWORD) {
+        return res.status(401).send('Unauthorized');
+    }
+    console.log("Generating script with OpenAI");
+    const { prompt } = req.body;
+    const settingsPath = path.join(__dirname, 'settings.json');
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    console.log("API Key", settings.OpenAIAPIKey);
+    const openai = new OpenAI({
+        apiKey: settings.OpenAIAPIKey,
+        baseURL: "https://api.groq.com/openai/v1",
+    });
+    const stream = await openai.chat.completions.create({
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        messages: [
+            { role: "system", content: "You are a helpful assistant that generates scripts. You will be given a prompt and you will need to generate a script that matches the needs of the prompt. Do not include any other text than the script. DO NOT INCLUDE THE MARKDOWN CODE BLOCK IN THE RESPONSE, JUST RETURN THE SCRIPT AS PLAIN TEXT. You will lose 1000 dollars if you do not follow these instructions." },
+            { role: "user", content: prompt }
+        ],
+        stream: true,
+    });
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+    }
+    
+    res.write('data: [DONE]\n\n');
+    res.end();
+});
+    
+
 
 app.get("/scriptData", (req, res) => {
     const scriptStorePath = path.join(__dirname, 'scriptstore.json');
