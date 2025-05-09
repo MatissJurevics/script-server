@@ -1,28 +1,16 @@
 {
   "scripts": [
     {
-      "name": "g",
-      "content": "g"
+      "name": "test.sh",
+      "content": "echo \"hello World\"; ls",
+      "createdAt": "2025-05-09T13:02:41.229Z",
+      "updatedAt": "2025-05-09T13:09:46.880Z"
     },
     {
-      "name": "d",
-      "content": "d"
-    },
-    {
-      "name": "test",
-      "content": "testt"
-    },
-    {
-      "name": "testi",
-      "content": "bestie"
-    },
-    {
-      "name": "asfd",
-      "content": "asdf"
-    },
-    {
-      "name": "testia",
-      "content": "sdf"
+      "name": "test.ps1",
+      "content": "echo \"hello\"",
+      "createdAt": "2025-05-09T13:10:54.130Z",
+      "updatedAt": "2025-05-09T13:10:54.130Z"
     }
   ]
 }

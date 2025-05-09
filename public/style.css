@@ -294,18 +294,23 @@ button:hover {
     margin-left: 5px;
 }
 
-/* Modal Styles */
+/* Modal Styles - Improved to match the list container */
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 100;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.6);
-    padding-top: 60px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
 }
 
 .modal-content {
@@ -316,40 +321,121 @@ button:hover {
     width: 80%;
     max-width: 700px;
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
+    opacity: 1;
 }
 
 .modal-content h2 {
     margin-top: 0;
     color: #a389f4;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #3a3a50;
+    margin-bottom: 15px;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
 }
 
 .modal-content label {
     display: block;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    color: #e0e0f0;
+    margin-top: 0;
+    margin-bottom: 6px;
+    color: #d0d0e0;
+    font-size: 0.9em;
 }
 
 .modal-content textarea {
-    width: calc(100% - 22px);
+    width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #4a4a64;
-    border-radius: 5px;
+    border-radius: 4px;
     background-color: #1e1e2c;
     color: #e0e0f0;
     min-height: 200px;
+    box-sizing: border-box;
+    font-family: 'Courier New', monospace;
+    resize: vertical;
 }
 
-.modal-content input[type="password"] {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #4a4a64;
-    border-radius: 5px;
-    background-color: #1e1e2c;
+.modal-content textarea:focus {
+    outline: none;
+    border-color: #5c6bc0;
+    box-shadow: 0 0 3px rgba(92, 107, 192, 0.2);
+}
+
+.modal-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #3a3a50;
+    padding-top: 15px;
+}
+
+.modal-footer button {
+    margin-left: 0;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    opacity: 0.9;
+    box-shadow: none;
+    background: #2e2e3e;
     color: #e0e0f0;
+    border: 1px solid #3a3a50;
+    transition: all 0.2s ease;
+}
+
+.modal-footer button:hover {
+    opacity: 1;
+    background: #383850;
+    box-shadow: 0 0 3px rgba(163, 137, 244, 0.3);
+}
+
+.download-btn {
+    border-bottom: 2px solid #42a5f5 !important;
+}
+
+.download-btn:hover {
+    color: #42a5f5 !important;
+}
+
+.save-btn {
+    border-bottom: 2px solid #7986cb !important;
+}
+
+.save-btn:hover {
+    color: #7986cb !important;
+}
+
+.confirm-btn {
+    border-bottom: 2px solid #f06292 !important;
+}
+
+.confirm-btn:hover {
+    color: #f06292 !important;
+}
+
+.cancel-btn {
+    background: #2e2e3e;
+    color: #d0d0e0;
+}
+
+.cancel-btn:hover {
+    background: #383850;
 }
 
 .close-button {
@@ -357,6 +443,11 @@ button:hover {
     float: right;
     font-size: 28px;
     font-weight: bold;
+    line-height: 1;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    transition: all 0.2s ease;
 }
 
 .close-button:hover,
@@ -364,6 +455,53 @@ button:hover {
     color: #cc6699;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* Modal content scrollbar styling to match other scrollbars */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #1e1e2c;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #3a3a50;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #4a4a64;
+}
+
+/* Keyboard shortcut hints */
+.keyboard-hint {
+    position: absolute;
+    bottom: 15px;
+    left: 25px;
+    color: #6b6b8a;
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Action buttons inside modal */
+.action-button {
+    background: none;
+    border: none;
+    color: #a389f4;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 0;
+    margin: 0 10px;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 /* Responsive Design Adjustments */

@@ -280,47 +280,79 @@ async function uploadScript() {
     }
 }
 
-function deleteScript(scriptName) {
-    // Set the script to delete and open the confirmation modal
-    scriptToDelete = scriptName;
-    document.getElementById('deleteScriptName').textContent = scriptName;
-    document.getElementById('deleteConfirmModal').style.display = 'block';
-}
-
-function closeDeleteConfirmModal() {
-    document.getElementById('deleteConfirmModal').style.display = 'none';
-    scriptToDelete = null;
-}
-
-async function confirmScriptDeletion() {
-    if (!scriptToDelete) {
-        closeDeleteConfirmModal();
-        return;
+// Enhanced modal functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'block';
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Set focus to the first input or textarea
+    const focusElement = modal.querySelector('textarea, input');
+    if (focusElement) {
+        setTimeout(() => {
+            focusElement.focus();
+        }, 300);
     }
     
-    const password = getPassword();
-    if (!password) return; // getPassword will redirect if no password
+    // Add ESC key listener for modal
+    document.addEventListener('keydown', handleModalKeydown);
+}
 
-    const response = await fetch(`/s/${scriptToDelete}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-    });
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    
+    // Wait for animation to finish before hiding
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+    
+    // Remove ESC key listener
+    document.removeEventListener('keydown', handleModalKeydown);
+}
 
-    const responseText = await response.text();
+function handleModalKeydown(event) {
+    // Handle ESC key to close modal
+    if (event.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal.show');
+        if (openModals.length > 0) {
+            // Find which modal is open
+            if (document.getElementById('viewModal').classList.contains('show')) {
+                closeViewModal();
+            } else if (document.getElementById('editModal').classList.contains('show')) {
+                closeEditModal();
+            } else if (document.getElementById('deleteConfirmModal').classList.contains('show')) {
+                closeDeleteConfirmModal();
+            }
+        }
+    }
     
-    closeDeleteConfirmModal();
+    // Handle Ctrl+S for saving in edit modal
+    if (event.ctrlKey && event.key === 's' && document.getElementById('editModal').classList.contains('show')) {
+        event.preventDefault();
+        saveEditedScript();
+    }
     
-    if (response.ok) {
-        showToast(`Script "${scriptToDelete}" deleted successfully.`, 'success');
-        fetchScripts(); // Refresh the list
-    } else if (response.status === 401) {
-        // If unauthorized, redirect to login page
-        window.location.href = '/login.html?error=auth';
-    } else {
-        showToast(responseText, 'error');
+    // Handle Ctrl+Enter for saving in edit modal
+    if (event.ctrlKey && event.key === 'Enter' && document.getElementById('editModal').classList.contains('show')) {
+        event.preventDefault();
+        saveEditedScript();
+    }
+    
+    // Handle D for download in view modal
+    if (event.key === 'd' && document.getElementById('viewModal').classList.contains('show')) {
+        event.preventDefault();
+        downloadScript();
+    }
+    
+    // Handle Enter for confirming deletion
+    if (event.key === 'Enter' && document.getElementById('deleteConfirmModal').classList.contains('show')) {
+        event.preventDefault();
+        confirmScriptDeletion();
     }
 }
 
@@ -333,20 +365,24 @@ async function openEditModal(scriptName) {
 
     currentEditingScriptName = scriptName;
     
-    // Fetch the script content
-    const response = await fetch(`/s/${scriptName}`);
-    const scriptContent = await response.text();
-    
-    // Populate the modal
-    document.getElementById('editModalScriptName').textContent = scriptName;
-    document.getElementById('editModalScriptContent').value = scriptContent;
-    
-    // Display the modal
-    document.getElementById('editModal').style.display = 'block';
+    try {
+        // Fetch the script content
+        const response = await fetch(`/s/${scriptName}`);
+        const scriptContent = await response.text();
+        
+        // Populate the modal
+        document.getElementById('editModalScriptName').textContent = scriptName;
+        document.getElementById('editModalScriptContent').value = scriptContent;
+        
+        // Display the modal
+        openModal('editModal');
+    } catch (error) {
+        showToast(`Error loading script: ${error.message}`, 'error');
+    }
 }
 
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    closeModal('editModal');
     currentEditingScriptName = null;
 }
 
@@ -384,20 +420,24 @@ async function saveEditedScript() {
 async function openViewModal(scriptName) {
     currentViewingScriptName = scriptName;
     
-    // Fetch the script content
-    const response = await fetch(`/s/${scriptName}`);
-    const scriptContent = await response.text();
-    
-    // Populate the modal
-    document.getElementById('viewModalScriptName').textContent = scriptName;
-    document.getElementById('viewModalScriptContent').value = scriptContent;
-    
-    // Display the modal
-    document.getElementById('viewModal').style.display = 'block';
+    try {
+        // Fetch the script content
+        const response = await fetch(`/s/${scriptName}`);
+        const scriptContent = await response.text();
+        
+        // Populate the modal
+        document.getElementById('viewModalScriptName').textContent = scriptName;
+        document.getElementById('viewModalScriptContent').value = scriptContent;
+        
+        // Display the modal
+        openModal('viewModal');
+    } catch (error) {
+        showToast(`Error loading script: ${error.message}`, 'error');
+    }
 }
 
 function closeViewModal() {
-    document.getElementById('viewModal').style.display = 'none';
+    closeModal('viewModal');
     currentViewingScriptName = null;
 }
 
@@ -462,5 +502,49 @@ async function setAsMainScript(scriptName) {
         }
     } catch (error) {
         showToast(`Error setting "${scriptName}" as main script.`, 'error');
+    }
+}
+
+function deleteScript(scriptName) {
+    // Set the script to delete and open the confirmation modal
+    scriptToDelete = scriptName;
+    document.getElementById('deleteScriptName').textContent = scriptName;
+    openModal('deleteConfirmModal');
+}
+
+function closeDeleteConfirmModal() {
+    closeModal('deleteConfirmModal');
+    scriptToDelete = null;
+}
+
+async function confirmScriptDeletion() {
+    if (!scriptToDelete) {
+        closeDeleteConfirmModal();
+        return;
+    }
+    
+    const password = getPassword();
+    if (!password) return; // getPassword will redirect if no password
+
+    const response = await fetch(`/s/${scriptToDelete}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+    });
+
+    const responseText = await response.text();
+    
+    closeDeleteConfirmModal();
+    
+    if (response.ok) {
+        showToast(`Script "${scriptToDelete}" deleted successfully.`, 'success');
+        fetchScripts(); // Refresh the list
+    } else if (response.status === 401) {
+        // If unauthorized, redirect to login page
+        window.location.href = '/login.html?error=auth';
+    } else {
+        showToast(responseText, 'error');
     }
 } 

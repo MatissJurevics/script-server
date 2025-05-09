@@ -14,10 +14,16 @@ const PASSWORD = process.env.PASSWORD;
 const PORT = 8080;
 const app = express();
 
-const jsonUpdater = (req, res, next) => {
+const updateJSON = () => {
     const jsonPath = path.join(__dirname, 'scriptstore.json');
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    let jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!jsonData) {
+        jsonData = { scripts: [] };
+    }
     const scriptNames = fs.readdirSync(path.join(__dirname, 'scripts'));
+    if (!jsonData.scripts) {
+        jsonData.scripts = [];
+    }
     let allNames = jsonData.scripts.map(script => script.name);
     let namesToRemove = [];
     allNames.forEach(name => {
@@ -25,9 +31,7 @@ const jsonUpdater = (req, res, next) => {
             namesToRemove.push(name);
         }
     });
-    console.log("namesToRemove", namesToRemove);
-    console.log("scriptNames", scriptNames);
-    console.log("allNames", allNames);
+   
     for (const name of namesToRemove) {
         jsonData.scripts = jsonData.scripts.filter(script => script.name !== name);
     }
@@ -45,13 +49,19 @@ const jsonUpdater = (req, res, next) => {
             }
         });
         if (!exists) {
-            jsonData.scripts.push({ name: scriptName, content: scriptContent });
+            jsonData.scripts.push({ name: scriptName, content: scriptContent, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            
         }
         if (!matches) {
             jsonData.scripts.find(script => script.name === scriptName).content = scriptContent;
+            jsonData.scripts.find(script => script.name === scriptName).updatedAt = new Date().toISOString();
         }
     }
     fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
+}
+
+const jsonUpdater = (req, res, next) => {
+    updateJSON();
     next();
 }
 
@@ -106,6 +116,7 @@ app.post('/upload', (req, res) => {
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     fs.writeFileSync(scriptPath, scriptContent);
     console.log("Script uploaded successfully", scriptName);
+    updateJSON();
     res.send('Script uploaded successfully');
 });
 
@@ -236,6 +247,7 @@ app.delete('/s/:scriptName', (req, res) => {
     const scriptPath = path.join(__dirname, 'scripts', scriptName);
     fs.unlinkSync(scriptPath);
     console.log("Script Deleted", scriptName);
+    updateJSON();
     res.send('Script deleted successfully');
 });
 
@@ -249,6 +261,7 @@ app.put('/s/:scriptName', (req, res) => {
     const scriptContent = req.body.scriptContent;
     fs.writeFileSync(scriptPath, scriptContent);
     console.log("Script Updated", scriptName);
+    updateJSON();
     res.send('Script updated successfully');
 });
 
@@ -270,4 +283,5 @@ if (!fs.existsSync(scriptsDir)) {
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Use password ${PASSWORD} to login`);
 });

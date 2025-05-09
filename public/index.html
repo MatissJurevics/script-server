@@ -239,12 +239,17 @@
         <span class="close-button" onclick="closeEditModal()">&times;</span>
         <h2>Edit Script: <span id="editModalScriptName"></span></h2>
         
-        <label for="editModalScriptContent">Content:</label>
-        <textarea id="editModalScriptContent" rows="15" placeholder="Script content"></textarea>
+        <div class="modal-body">
+            <label for="editModalScriptContent">Content:</label>
+            <textarea id="editModalScriptContent" rows="15" placeholder="Script content"></textarea>
+        </div>
         
         <div class="modal-footer">
-            <button onclick="saveEditedScript()">Save Changes</button>
+            <button class="cancel-btn" onclick="closeEditModal()">Cancel</button>
+            <button class="save-btn" onclick="saveEditedScript()">Save Changes</button>
         </div>
+        
+        <div class="keyboard-hint">Press Ctrl+S or Ctrl+Enter to save • ESC to cancel</div>
     </div>
 </div>
 
@@ -254,12 +259,17 @@
         <span class="close-button" onclick="closeViewModal()">&times;</span>
         <h2>View Script: <span id="viewModalScriptName"></span></h2>
         
-        <label for="viewModalScriptContent">Content:</label>
-        <textarea id="viewModalScriptContent" rows="15" placeholder="Script content" readonly></textarea>
+        <div class="modal-body">
+            <label for="viewModalScriptContent">Content:</label>
+            <textarea id="viewModalScriptContent" rows="15" placeholder="Script content" readonly></textarea>
+        </div>
         
         <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeViewModal()">Close</button>
             <button class="download-btn" onclick="downloadScript()">Download Script</button>
         </div>
+        
+        <div class="keyboard-hint">Press D to download • ESC to close</div>
     </div>
 </div>
 
@@ -269,12 +279,16 @@
         <span class="close-button" onclick="closeDeleteConfirmModal()">&times;</span>
         <h2>Confirm Deletion</h2>
         
-        <p class="confirm-modal-message">Are you sure you want to delete "<span id="deleteScriptName"></span>"?</p>
-        <p>This action cannot be undone.</p>
+        <div class="modal-body">
+            <p class="confirm-modal-message">Are you sure you want to delete "<span id="deleteScriptName"></span>"?</p>
+            <p>This action cannot be undone.</p>
+        </div>
         
-        <div class="confirm-modal-footer">
+        <div class="modal-footer">
             <button class="cancel-btn" onclick="closeDeleteConfirmModal()">Cancel</button>
             <button class="confirm-btn" onclick="confirmScriptDeletion()">Delete</button>
         </div>
+        
+        <div class="keyboard-hint">Press Enter to confirm </div>
     </div>
 </div> 
