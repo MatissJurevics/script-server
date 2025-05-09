@@ -1,0 +1,28 @@
+{
+  "scripts": [
+    {
+      "name": "g",
+      "content": "g"
+    },
+    {
+      "name": "d",
+      "content": "d"
+    },
+    {
+      "name": "test",
+      "content": "testt"
+    },
+    {
+      "name": "testi",
+      "content": "bestie"
+    },
+    {
+      "name": "asfd",
+      "content": "asdf"
+    },
+    {
+      "name": "testia",
+      "content": "sdf"
+    }
+  ]
+}

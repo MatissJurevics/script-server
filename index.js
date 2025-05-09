@@ -14,9 +14,51 @@ const PASSWORD = process.env.PASSWORD;
 const PORT = 8080;
 const app = express();
 
+const jsonUpdater = (req, res, next) => {
+    const jsonPath = path.join(__dirname, 'scriptstore.json');
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const scriptNames = fs.readdirSync(path.join(__dirname, 'scripts'));
+    let allNames = jsonData.scripts.map(script => script.name);
+    let namesToRemove = [];
+    allNames.forEach(name => {
+        if (!scriptNames.includes(name)) {
+            namesToRemove.push(name);
+        }
+    });
+    console.log("namesToRemove", namesToRemove);
+    console.log("scriptNames", scriptNames);
+    console.log("allNames", allNames);
+    for (const name of namesToRemove) {
+        jsonData.scripts = jsonData.scripts.filter(script => script.name !== name);
+    }
+    for (const scriptName of scriptNames) {
+        // Check if scriptName is already in the jsonData.scripts array
+        let scriptContent = fs.readFileSync(path.join(__dirname, 'scripts', scriptName), 'utf8');
+        let exists = false;
+        let matches = false;
+        jsonData.scripts.forEach(script => {
+            if (script.name === scriptName) {
+                exists = true;
+            }
+            if (script.content === scriptContent) {
+                matches = true;
+            }
+        });
+        if (!exists) {
+            jsonData.scripts.push({ name: scriptName, content: scriptContent });
+        }
+        if (!matches) {
+            jsonData.scripts.find(script => script.name === scriptName).content = scriptContent;
+        }
+    }
+    fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
+    next();
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(jsonUpdater);
 
 // Authentication routes first
 app.get('/', (req, res) => {
