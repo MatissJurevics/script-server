@@ -55,8 +55,6 @@ Script Manager is a powerful web-based application that helps you organize, stor
 3. **Create a .env file:**
    ```
    PASSWORD=your_secure_password
-   # Optional: OpenAI API key for AI features
-   OPENAI_API_KEY=your_openai_api_key
    ```
 
 4. **Start the server:**
@@ -93,40 +91,7 @@ Script Manager is a powerful web-based application that helps you organize, stor
 6. **View analytics** to track usage
 7. **Adjust settings** to customize your experience
 
-### API Usage
-
-The application provides a RESTful API for programmatic access:
-
-#### Upload a script
-
-```bash
-curl -X POST http://localhost:8080/upload \
-  -H "Content-Type: application/json" \
-  -d '{"password": "your_password", "scriptName": "script.js", "scriptContent": "console.log(\"Hello, world!\");"}'
-```
-
-#### Download a script
-
-```bash
-curl http://localhost:8080/s/script.js
-```
-
-#### Delete a script
-
-```bash
-curl -X DELETE http://localhost:8080/s/script.js \
-  -H "Content-Type: application/json" \
-  -d '{"password": "your_password"}'
-```
-
-#### Update a script
-
-```bash
-curl -X PUT http://localhost:8080/s/script.js \
-  -H "Content-Type: application/json" \
-  -d '{"password": "your_password", "scriptContent": "console.log(\"Updated script!\");"}'
-```
-
+#
 ## Analytics Dashboard 📊
 
 The analytics dashboard provides insights into:
