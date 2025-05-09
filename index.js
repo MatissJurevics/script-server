@@ -33,6 +33,13 @@ fs.watch(path.join(__dirname, 'usage.json'), (event, filename) => {
         io.emit('usageChange', usage);
     }
 });
+fs.watch(path.join(__dirname, 'scriptstore.json'), (event, filename) => {
+    if (event === 'change') {
+        const scriptStore = JSON.parse(fs.readFileSync(path.join(__dirname, 'scriptstore.json'), 'utf8'));
+        console.log('scriptStoreChange');
+        io.emit('scriptStoreChange', scriptStore);
+    }
+});
 
 
 
