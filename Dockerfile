@@ -10,9 +10,6 @@ COPY package*.json ./
 # Install project dependencies
 RUN bun install
 
-# Create scripts and public directories
-RUN mkdir -p scripts public
-
 # Bundle app source
 COPY . .
 

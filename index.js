@@ -20,8 +20,50 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server); // Attach Socket.IO to the HTTP server
 
+const setup = () => {
+    // Check if all the files exist, if not, create them and add default values
+    const files = [
+        'usage.json',
+        'scriptstore.json',
+        'settings.json',
+        'current_main_script.json'
+    ]
+    files.forEach(file => {
+        if (!fs.existsSync(path.join(__dirname, file))) {
+            fs.writeFileSync(path.join(__dirname, file), JSON.stringify({}));
+        }
+    });
+    // Check if the usage.json file is empty, if so, add a default value
+    const usage = JSON.parse(fs.readFileSync(path.join(__dirname, 'usage.json'), 'utf8'));
+    if (usage.length === 0) {
+        fs.writeFileSync(path.join(__dirname, 'usage.json'), JSON.stringify([{
+            timestamp: new Date().toISOString(),
+            ip: '127.0.0.1',
+            userAgent: 'Script Manager'
+        }]));
+    }
+    // Check if the scriptstore.json file is empty, if so, add a default value
+    const scriptStore = JSON.parse(fs.readFileSync(path.join(__dirname, 'scriptstore.json'), 'utf8'));
+    if (scriptStore.scripts.length === 0) {
+        fs.writeFileSync(path.join(__dirname, 'scriptstore.json'), JSON.stringify({ scripts: [] }));
+    }
+    // Check if the settings.json file is empty, if so, add a default value
+    const settings = JSON.parse(fs.readFileSync(path.join(__dirname, 'settings.json'), 'utf8'));
+    if (Object.keys(settings).length === 0) {
+        fs.writeFileSync(path.join(__dirname, 'settings.json'), JSON.stringify({
+            scriptsPerPage: 10,
+            OpenAIAPIKey: '',
+            aiContextMenuEnabled: true
+        }));
+    }
+    // Check if the current_main_script.json file is empty, if so, add a default value
+    const currentMainScript = JSON.parse(fs.readFileSync(path.join(__dirname, 'current_main_script.json'), 'utf8'));
+    if (Object.keys(currentMainScript).length === 0) {
+        fs.writeFileSync(path.join(__dirname, 'current_main_script.json'), JSON.stringify({ mainScriptName: null }));
+    }
+}
 
-
+setup();
 io.on('connection', (socket) => {
     console.log('a user connected');
 });
