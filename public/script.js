@@ -852,10 +852,7 @@ let currentEditingScriptName = null;
 async function getAllScriptData(forceRefresh = false) {
     const now = Date.now();
     
-    // Use cached data if available and not expired
-    if (scriptDataCache && !forceRefresh && (now - lastScriptDataFetch < CACHE_TIMEOUT)) {
-        return scriptDataCache;
-    }
+    
     
     try {
         // Fetch all script data from the scriptData endpoint

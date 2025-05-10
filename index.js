@@ -7,9 +7,18 @@ import cookieParser from 'cookie-parser';
 import OpenAI from 'openai';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { JSONFilePresets } from 'lowdb/node';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const defaultData = {
+    usage: [],
+    scriptstore: { scripts: [] },
+    settings: { scriptsPerPage: 10, OpenAIAPIKey: '', aiContextMenuEnabled: true },
+    current_main_script: { mainScriptName: null }
+}
+
 
 dotenv.config();
 
