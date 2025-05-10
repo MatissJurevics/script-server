@@ -553,6 +553,7 @@ button:hover {
         margin-right: auto;
         padding: 1rem; /* Reduced padding on tablet */
     }
+
     
     .form-container {
         order: 2; /* Move the form below the script list */
@@ -561,7 +562,7 @@ button:hover {
     .list-container {
         order: 1;
         margin-bottom: 1.25rem; /* 20px to rem */
-        max-height: 25rem !important; /* Limit height on mobile */
+        max-height: 40rem !important; /* Limit height on mobile */
     }
     
     #scriptList {
@@ -629,6 +630,10 @@ button:hover {
         border-radius: 0.5rem;
         padding: 0.875rem; /* Even smaller padding on mobile */
         box-sizing: border-box;
+    }
+
+    .list-container {
+        max-height: 40rem !important;
     }
     
     .header-container {
