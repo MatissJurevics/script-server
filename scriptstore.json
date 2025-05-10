@@ -11,15 +11,6 @@
       ]
     },
     {
-      "name": "test.ps1",
-      "content": "echo \"hello\"",
-      "createdAt": "2025-05-09T13:10:54.130Z",
-      "updatedAt": "2025-05-09T13:10:54.130Z",
-      "tags": [
-        "test"
-      ]
-    },
-    {
       "name": "list.sh",
       "content": "ls -la",
       "createdAt": "2025-05-09T13:52:04.519Z",
@@ -68,18 +59,6 @@
       "content": "asdfasf",
       "createdAt": "2025-05-09T17:51:25.151Z",
       "updatedAt": "2025-05-09T17:51:25.151Z"
-    },
-    {
-      "name": "testakb",
-      "content": "test",
-      "createdAt": "2025-05-09T18:01:50.150Z",
-      "updatedAt": "2025-05-09T18:01:50.150Z"
-    },
-    {
-      "name": "test.ps12",
-      "content": "asdf",
-      "createdAt": "2025-05-09T18:12:59.210Z",
-      "updatedAt": "2025-05-09T18:12:59.210Z"
     }
   ]
 }
