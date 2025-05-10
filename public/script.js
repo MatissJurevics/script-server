@@ -2,9 +2,6 @@ let currentMainScriptName = null;
 let currentViewingScriptName = null;
 let scriptToDelete = null;
 let toastTimeout = null;
-let scriptDataCache = null;
-let lastScriptDataFetch = 0;
-const CACHE_TIMEOUT = 30000; // 30 seconds cache
 let currentSettings = null;
 let currentAiResponse = '';
 let aiContextMenuVisible = false;
@@ -626,7 +623,7 @@ function renderScriptListItem(script) {
 async function fetchScripts() {
     try {
         // First get all script data from the scriptData endpoint
-        allScriptsData = await getAllScriptData(true);
+        allScriptsData = await getAllScriptData();
         
         // Then get the simple list of script names for ordering (to maintain order from server)
         const response = await fetch('/scripts');
@@ -742,7 +739,7 @@ async function uploadScript() {
         }
         
         // Force refresh the script data cache and update tag filters
-        await getAllScriptData(true);
+        await getAllScriptData();
         
         showToast(`Script "${scriptName}" uploaded successfully.`, 'success');
         
@@ -848,12 +845,8 @@ function handleModalKeydown(event) {
 // Store the name of the script currently being edited
 let currentEditingScriptName = null;
 
-// Add a helper function to get all script data with caching
-async function getAllScriptData(forceRefresh = false) {
-    const now = Date.now();
-    
-    
-    
+// Add a helper function to get all script data
+async function getAllScriptData() {
     try {
         // Fetch all script data from the scriptData endpoint
         const response = await fetch('/scriptData');
@@ -863,10 +856,6 @@ async function getAllScriptData(forceRefresh = false) {
         
         const scriptDataArray = await response.json();
         
-        // Update cache
-        scriptDataCache = scriptDataArray;
-        lastScriptDataFetch = now;
-        
         return scriptDataArray;
     } catch (error) {
         console.error('Error fetching script data:', error);
@@ -875,10 +864,10 @@ async function getAllScriptData(forceRefresh = false) {
 }
 
 // Add a helper function to get script data by name
-async function getScriptDataByName(scriptName, forceRefresh = false) {
+async function getScriptDataByName(scriptName) {
     try {
-        // Get all script data (potentially from cache)
-        const scriptDataArray = await getAllScriptData(forceRefresh);
+        // Get all script data (will always fetch fresh)
+        const scriptDataArray = await getAllScriptData();
         
         // Find the script with the matching name
         const scriptData = scriptDataArray.find(script => script.scriptName === scriptName);
@@ -951,7 +940,7 @@ async function addTag() {
         
         // Re-render tags and refresh cache
         renderEditTags();
-        await getAllScriptData(true);
+        await getAllScriptData();
         
         // Update filter tags if needed (if tag is new)
         if (!allAvailableTags.includes(tag)) {
@@ -1000,10 +989,10 @@ async function removeTag(tag) {
         }
         
         // If successful, refresh the script data cache
-        await getAllScriptData(true);
+        await getAllScriptData();
         
         // Check if we need to update the available tags (if this tag is no longer used by any script)
-        const scriptData = await getAllScriptData(false); // Use cached data
+        const scriptData = await getAllScriptData();
         const tagsStillInUse = extractAllTags(scriptData);
         
         if (!tagsStillInUse.includes(tag)) {
@@ -1092,7 +1081,7 @@ async function saveEditedScript() {
 
         if (response.ok) {
             // Force refresh script data cache after updating
-            await getAllScriptData(true);
+            await getAllScriptData();
             
             showToast(`Script "${currentEditingScriptName}" updated successfully.`, 'success');
             closeEditModal();
@@ -1254,7 +1243,7 @@ async function confirmScriptDeletion() {
     
     if (response.ok) {
         // Force refresh script data cache after deletion
-        await getAllScriptData(true);
+        await getAllScriptData();
         
         // Check if the deleted script had a tag that is currently being filtered
         // If so, we may need to update the available tags list

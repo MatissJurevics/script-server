@@ -1,16 +1,6 @@
 {
   "scripts": [
     {
-      "name": "test.sh",
-      "content": "echo \"hello World\"; ls",
-      "createdAt": "2025-05-09T13:02:41.229Z",
-      "updatedAt": "2025-05-09T13:09:46.880Z",
-      "tags": [
-        "Linux",
-        "test"
-      ]
-    },
-    {
       "name": "list.sh",
       "content": "ls -la",
       "createdAt": "2025-05-09T13:52:04.519Z",
@@ -40,15 +30,6 @@
       ]
     },
     {
-      "name": "neofetch.sh",
-      "content": "neofetch | lolcat",
-      "createdAt": "2025-05-09T14:24:09.412Z",
-      "updatedAt": "2025-05-09T14:24:09.412Z",
-      "tags": [
-        "Linux"
-      ]
-    },
-    {
       "name": "tea",
       "content": "aseta",
       "createdAt": "2025-05-09T17:42:59.775Z",
@@ -59,6 +40,12 @@
       "content": "asdfasf",
       "createdAt": "2025-05-09T17:51:25.151Z",
       "updatedAt": "2025-05-09T17:51:25.151Z"
+    },
+    {
+      "name": "helloso",
+      "content": "adsf",
+      "createdAt": "2025-05-10T10:12:48.760Z",
+      "updatedAt": "2025-05-10T10:12:48.760Z"
     }
   ]
 }
