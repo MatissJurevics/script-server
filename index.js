@@ -196,6 +196,9 @@ app.post('/upload', (req, res) => {
 });
 
 app.get('/scripts', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Prevent caching
+    res.setHeader('Pragma', 'no-cache'); // For HTTP/1.0 proxies
+    res.setHeader('Expires', '0'); // For older browsers
     const scripts = fs.readdirSync(path.join(__dirname, 'scripts'));
     console.log("Scripts Requested");
     res.json(scripts);
@@ -398,6 +401,9 @@ app.post("/aigen", async (req, res) => {
 
 
 app.get("/scriptData", (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Prevent caching
+    res.setHeader('Pragma', 'no-cache'); // For HTTP/1.0 proxies
+    res.setHeader('Expires', '0'); // For older browsers
     const scriptStorePath = path.join(__dirname, 'scriptstore.json');
     const scriptStore = JSON.parse(fs.readFileSync(scriptStorePath, 'utf8'));
     const scriptData = scriptStore.scripts.map(script => {
